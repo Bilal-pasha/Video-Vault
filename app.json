@@ -1,48 +1,63 @@
 {
   "expo": {
-    "name": "Video-Mobile-Application",
-    "slug": "Video-Mobile-Application",
+    "name": "Video Mobile Application",
+    "slug": "video-mobile-application",
     "version": "1.0.0",
+    "scheme": "video-mobile-application",
+    "web": {
+      "favicon": "./src/assets/images/favicon.png"
+    },
+    "experiments": {
+      "tsconfigPaths": true
+    },
+    "plugins": ["expo-router", "expo-web-browser"],
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "videomobileapplication",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "icon": "./src/assets/images/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./src/assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.video-mobile-application.app",
+      "associatedDomains": ["applinks:online2.video-mobile-application.com"],
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "foregroundImage": "./src/assets/images/android-icon-foreground.png",
+        "backgroundImage": "./src/assets/images/android-icon-background.png",
+        "monochromeImage": "./src/assets/images/android-icon-monochrome.png"
       },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
-    },
-    "web": {
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
-    },
-    "plugins": [
-      "expo-router",
-      [
-        "expo-splash-screen",
+      "package": "com.video-mobile-application.app",
+      "intentFilters": [
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "backgroundColor": "#000000"
-          }
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "online2.video-mobile-application.com"
+            },
+            {
+              "scheme": "video-mobile-application"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
-    ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "fc3c9412-84be-46b2-adc6-347d8d6f4a44"
+      }
+    },
+    "owner": "video-mobile-application_technologies"
   }
 }
