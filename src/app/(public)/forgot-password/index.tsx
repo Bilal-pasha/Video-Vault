@@ -5,6 +5,7 @@ import { Alert, Pressable, StyleSheet, TextInput, KeyboardAvoidingView, Platform
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { PublicRoutes } from '@/constants/routes';
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
@@ -24,7 +25,7 @@ export default function ForgotPasswordScreen() {
       [
         {
           text: 'OK',
-          onPress: () => router.push('/(public)/ResetPassword'),
+          onPress: () => router.push(PublicRoutes.RESET_PASSWORD),
         },
       ]
     );
@@ -67,7 +68,7 @@ export default function ForgotPasswordScreen() {
           </Pressable>
 
           <ThemedView style={styles.backContainer}>
-            <Link href="/(public)/Login">
+            <Link href={PublicRoutes.LOGIN}>
               <ThemedText type="link">Back to Sign In</ThemedText>
             </Link>
           </ThemedView>

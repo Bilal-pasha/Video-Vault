@@ -1,26 +1,39 @@
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { PublicRoutes } from '@/constants/routes';
 
-export default function LoginScreen() {
-  const [email, setEmail] = useState('');
+export default function ResetPasswordScreen() {
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const borderColor = useThemeColor({ light: '#E5E5E5', dark: '#2D2D2D' }, 'icon');
 
-  const handleLogin = () => {
-    if (!email || !password) {
+  const handleReset = () => {
+    if (!password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-    // TODO: Implement actual login logic
-    Alert.alert('Success', 'Login successful!');
-    // TODO: Redirect to dashboard after login
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters');
+      return;
+    }
+    // TODO: Implement actual password reset logic
+    Alert.alert('Success', 'Your password has been reset successfully!', [
+      {
+        text: 'OK',
+        onPress: () => router.replace(PublicRoutes.LOGIN),
+      },
+    ]);
   };
 
   return (
@@ -29,58 +42,53 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ThemedView style={styles.content}>
         <ThemedText type="title" style={styles.title}>
-          Welcome Back
+          Reset Password
         </ThemedText>
         <ThemedText style={styles.subtitle}>
-          Sign in to continue
+          Enter your new password below
         </ThemedText>
 
         <ThemedView style={styles.form}>
           <ThemedView style={styles.inputContainer}>
-            <ThemedText style={styles.label}>Email</ThemedText>
+            <ThemedText style={styles.label}>New Password</ThemedText>
             <TextInput
               style={[styles.input, { color: textColor, borderColor }]}
-              placeholder="Enter your email"
-              placeholderTextColor={useThemeColor({ light: '#9BA1A6', dark: '#687076' }, 'icon')}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-            />
-          </ThemedView>
-
-          <ThemedView style={styles.inputContainer}>
-            <ThemedText style={styles.label}>Password</ThemedText>
-            <TextInput
-              style={[styles.input, { color: textColor, borderColor }]}
-              placeholder="Enter your password"
+              placeholder="Enter new password"
               placeholderTextColor={useThemeColor({ light: '#9BA1A6', dark: '#687076' }, 'icon')}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
               autoCapitalize="none"
-              autoComplete="password"
+              autoComplete="password-new"
             />
           </ThemedView>
 
-          <Link href="/(public)/ForgotPassword" style={styles.forgotLink}>
-            <ThemedText type="link">Forgot Password?</ThemedText>
-          </Link>
+          <ThemedView style={styles.inputContainer}>
+            <ThemedText style={styles.label}>Confirm New Password</ThemedText>
+            <TextInput
+              style={[styles.input, { color: textColor, borderColor }]}
+              placeholder="Confirm new password"
+              placeholderTextColor={useThemeColor({ light: '#9BA1A6', dark: '#687076' }, 'icon')}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry
+              autoCapitalize="none"
+              autoComplete="password-new"
+            />
+          </ThemedView>
 
           <Pressable
             style={({ pressed }) => [
               styles.button,
               { opacity: pressed ? 0.8 : 1 },
             ]}
-            onPress={handleLogin}>
-            <ThemedText style={styles.buttonText}>Sign In</ThemedText>
+            onPress={handleReset}>
+            <ThemedText style={styles.buttonText}>Reset Password</ThemedText>
           </Pressable>
 
-          <ThemedView style={styles.signupContainer}>
-            <ThemedText>Don't have an account? </ThemedText>
-            <Link href="/(public)/Register">
-              <ThemedText type="link">Sign Up</ThemedText>
+          <ThemedView style={styles.backContainer}>
+            <Link href={PublicRoutes.LOGIN}>
+              <ThemedText type="link">Back to Sign In</ThemedText>
             </Link>
           </ThemedView>
         </ThemedView>
@@ -125,16 +133,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
   },
-  forgotLink: {
-    alignSelf: 'flex-end',
-    marginBottom: 24,
-  },
   button: {
     backgroundColor: '#0a7ea4',
     height: 50,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 8,
     marginBottom: 24,
   },
   buttonText: {
@@ -142,9 +147,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  signupContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+  backContainer: {
     alignItems: 'center',
   },
 });

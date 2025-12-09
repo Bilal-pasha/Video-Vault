@@ -5,6 +5,7 @@ import { Alert, Pressable, StyleSheet, TextInput, KeyboardAvoidingView, Platform
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { PublicRoutes } from '@/constants/routes';
 
 export default function RegisterScreen() {
   const [name, setName] = useState('');
@@ -112,7 +113,7 @@ export default function RegisterScreen() {
 
           <ThemedView style={styles.loginContainer}>
             <ThemedText>Already have an account? </ThemedText>
-            <Link href="/(public)/Login">
+            <Link href={PublicRoutes.LOGIN}>
               <ThemedText type="link">Sign In</ThemedText>
             </Link>
           </ThemedView>

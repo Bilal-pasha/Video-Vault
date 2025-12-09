@@ -4,6 +4,7 @@ import { StyleSheet, ScrollView, Pressable } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { PublicRoutes } from '@/constants/routes';
 
 export default function DashboardScreen() {
   const backgroundColor = useThemeColor({}, 'background');
@@ -11,7 +12,7 @@ export default function DashboardScreen() {
 
   const handleLogout = () => {
     // TODO: Implement logout logic
-    router.replace('/(public)/Login');
+    router.replace(PublicRoutes.LOGIN);
   };
 
   return (
