@@ -51,14 +51,20 @@ export default function WelcomeScreen() {
               <Text style={styles.signInText}>Sign In</Text>
             </LinearGradient>
           </Pressable>
-
+          
           <Pressable
             style={({ pressed }) => [
               styles.createAccountButton,
               pressed && styles.buttonPressed,
             ]}
             onPress={() => router.push(PublicRoutes.REGISTER)}>
-            <Text style={styles.createAccountText}>Create Account</Text>
+            <LinearGradient
+              colors={['#FFFFFF', '#DBEAFE']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.signInGradient}>
+              <Text style={styles.createAccountText}>Create Account</Text>
+            </LinearGradient>
           </Pressable>
         </View>
       </View>
