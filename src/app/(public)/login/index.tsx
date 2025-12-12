@@ -1,91 +1,400 @@
-import { Link } from 'expo-router';
-import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { Link, useRouter } from 'expo-router';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { LinearGradient } from 'expo-linear-gradient';
+import {
+  Alert,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+} from 'react-native';
+import { ArrowLeft, Mail, Lock } from 'lucide-react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  withDelay,
+  withSequence,
+} from 'react-native-reanimated';
+import { useEffect } from 'react';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { PublicRoutes } from '@/constants/routes';
+import { loginSchema, type LoginFormData } from '@/schemas';
+import { images } from '@/constants/images';
+
+const AppleIcon = images.appleLogo;
+const GoogleIcon = images.googleLogo;
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const AnimatedThemedView = Animated.createAnimatedComponent(ThemedView);
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const router = useRouter();
+
+  // Animation values
+  const backButtonOpacity = useSharedValue(0);
+  const backButtonTranslateX = useSharedValue(-20);
+  const headerTranslateY = useSharedValue(30);
+  const headerOpacity = useSharedValue(0);
+  const emailInputTranslateY = useSharedValue(30);
+  const emailInputOpacity = useSharedValue(0);
+  const passwordInputTranslateY = useSharedValue(30);
+  const passwordInputOpacity = useSharedValue(0);
+  const forgotLinkOpacity = useSharedValue(0);
+  const signInButtonScale = useSharedValue(0.9);
+  const signInButtonOpacity = useSharedValue(0);
+  const dividerOpacity = useSharedValue(0);
+  const dividerScale = useSharedValue(0.8);
+  const appleButtonTranslateY = useSharedValue(30);
+  const appleButtonOpacity = useSharedValue(0);
+  const googleButtonTranslateY = useSharedValue(30);
+  const googleButtonOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    // Back button animation
+    backButtonOpacity.value = withTiming(1, { duration: 400 });
+    backButtonTranslateX.value = withSpring(0, { damping: 15, stiffness: 150 });
+
+    // Header animation
+    headerTranslateY.value = withDelay(
+      100,
+      withSpring(0, { damping: 15, stiffness: 150 })
+    );
+    headerOpacity.value = withDelay(100, withTiming(1, { duration: 500 }));
+
+    // Email input animation
+    emailInputTranslateY.value = withDelay(
+      200,
+      withSpring(0, { damping: 15, stiffness: 150 })
+    );
+    emailInputOpacity.value = withDelay(200, withTiming(1, { duration: 500 }));
+
+    // Password input animation
+    passwordInputTranslateY.value = withDelay(
+      300,
+      withSpring(0, { damping: 15, stiffness: 150 })
+    );
+    passwordInputOpacity.value = withDelay(300, withTiming(1, { duration: 500 }));
+
+    // Forgot link animation
+    forgotLinkOpacity.value = withDelay(400, withTiming(1, { duration: 500 }));
+
+    // Sign in button animation
+    signInButtonScale.value = withDelay(
+      500,
+      withSpring(1, { damping: 15, stiffness: 150 })
+    );
+    signInButtonOpacity.value = withDelay(500, withTiming(1, { duration: 500 }));
+
+    // Divider animation
+    dividerOpacity.value = withDelay(600, withTiming(1, { duration: 500 }));
+    dividerScale.value = withDelay(
+      600,
+      withSpring(1, { damping: 15, stiffness: 150 })
+    );
+
+    // Social buttons animation
+    appleButtonTranslateY.value = withDelay(
+      700,
+      withSpring(0, { damping: 15, stiffness: 150 })
+    );
+    appleButtonOpacity.value = withDelay(700, withTiming(1, { duration: 500 }));
+
+    googleButtonTranslateY.value = withDelay(
+      800,
+      withSpring(0, { damping: 15, stiffness: 150 })
+    );
+    googleButtonOpacity.value = withDelay(800, withTiming(1, { duration: 500 }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const borderColor = useThemeColor({ light: '#E5E5E5', dark: '#2D2D2D' }, 'icon');
+  const inputBorderColor = useThemeColor({ light: '#E5E5E5', dark: '#2D2D2D' }, 'icon');
+  const inputBackgroundColor = useThemeColor({ light: '#FFFFFF', dark: '#1C1C1E' }, 'background');
+  const iconColor = useThemeColor({ light: '#9BA1A6', dark: '#687076' }, 'icon');
+  const placeholderColor = useThemeColor({ light: '#9BA1A6', dark: '#687076' }, 'icon');
 
-  const handleLogin = () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  const onSubmit = async (data: LoginFormData) => {
+    try {
+      // TODO: Implement actual login logic
+      console.log('Login data:', data);
+      Alert.alert('Success', 'Login successful!');
+      // TODO: Redirect to dashboard after login
+      // router.replace(PrivateRoutes.DASHBOARD);
+    } catch {
+      Alert.alert('Error', 'Failed to login. Please try again.');
     }
-    // TODO: Implement actual login logic
-    Alert.alert('Success', 'Login successful!');
-    // TODO: Redirect to dashboard after login
+  };
+
+  const handleAppleLogin = () => {
+    // TODO: Implement Apple login
+    Alert.alert('Info', 'Apple login coming soon');
+  };
+
+  const handleGoogleLogin = () => {
+    // TODO: Implement Google login
+    Alert.alert('Info', 'Google login coming soon');
+  };
+
+  // Animated styles
+  const backButtonAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: backButtonOpacity.value,
+    transform: [{ translateX: backButtonTranslateX.value }],
+  }));
+
+  const headerAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: headerOpacity.value,
+    transform: [{ translateY: headerTranslateY.value }],
+  }));
+
+  const emailInputAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: emailInputOpacity.value,
+    transform: [{ translateY: emailInputTranslateY.value }],
+  }));
+
+  const passwordInputAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: passwordInputOpacity.value,
+    transform: [{ translateY: passwordInputTranslateY.value }],
+  }));
+
+  const forgotLinkAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: forgotLinkOpacity.value,
+  }));
+
+  const signInButtonAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: signInButtonOpacity.value,
+    transform: [{ scale: signInButtonScale.value }],
+  }));
+
+  const dividerAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: dividerOpacity.value,
+    transform: [{ scale: dividerScale.value }],
+  }));
+
+
+  const googleButtonAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: googleButtonOpacity.value,
+    transform: [{ translateY: googleButtonTranslateY.value }],
+  }));
+
+  const buttonPressScale = useSharedValue(1);
+
+  const buttonPressStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonPressScale.value }],
+  }));
+
+  const handleButtonPress = (callback: () => void) => {
+    buttonPressScale.value = withSequence(
+      withTiming(0.95, { duration: 100 }),
+      withSpring(1, { damping: 15, stiffness: 150 })
+    );
+    setTimeout(callback, 150);
   };
 
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ThemedView style={styles.content}>
-        <ThemedText type="title" style={styles.title}>
-          Welcome Back
-        </ThemedText>
-        <ThemedText style={styles.subtitle}>
-          Sign in to continue
-        </ThemedText>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
+        <ThemedView style={styles.content}>
+          {/* Back Button */}
+          <AnimatedPressable
+            style={[styles.backButton, backButtonAnimatedStyle]}
+            onPress={() => router.back()}>
+            <ArrowLeft size={20} color={textColor} />
+            <ThemedText style={styles.backButtonText}>Back</ThemedText>
+          </AnimatedPressable>
 
-        <ThemedView style={styles.form}>
-          <ThemedView style={styles.inputContainer}>
-            <ThemedText style={styles.label}>Email</ThemedText>
-            <TextInput
-              style={[styles.input, { color: textColor, borderColor }]}
-              placeholder="Enter your email"
-              placeholderTextColor={useThemeColor({ light: '#9BA1A6', dark: '#687076' }, 'icon')}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-            />
-          </ThemedView>
+          {/* Header */}
+          <AnimatedThemedView style={[styles.header, headerAnimatedStyle]}>
+            <ThemedText type="title" style={styles.title}>
+              Welcome Back
+            </ThemedText>
+            <ThemedText style={styles.subtitle}>Sign in to continue</ThemedText>
+          </AnimatedThemedView>
 
-          <ThemedView style={styles.inputContainer}>
-            <ThemedText style={styles.label}>Password</ThemedText>
-            <TextInput
-              style={[styles.input, { color: textColor, borderColor }]}
-              placeholder="Enter your password"
-              placeholderTextColor={useThemeColor({ light: '#9BA1A6', dark: '#687076' }, 'icon')}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoCapitalize="none"
-              autoComplete="password"
-            />
-          </ThemedView>
+          {/* Form */}
+          <ThemedView style={styles.form}>
+            {/* Email Input */}
+            <AnimatedThemedView style={[styles.inputContainer, emailInputAnimatedStyle]}>
+              <ThemedView
+                style={[
+                  styles.inputWrapper,
+                  {
+                    borderColor: inputBorderColor,
+                    backgroundColor: inputBackgroundColor,
+                  },
+                ]}>
+                <Mail size={20} color={iconColor} style={styles.inputIcon} />
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      placeholder="Enter your email"
+                      placeholderTextColor={placeholderColor}
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoComplete="email"
+                      autoCorrect={false}
+                    />
+                  )}
+                />
+              </ThemedView>
+              {errors.email && (
+                <ThemedText style={styles.errorText}>{errors.email.message}</ThemedText>
+              )}
+            </AnimatedThemedView>
 
-          <Link href={PublicRoutes.FORGOT_PASSWORD} style={styles.forgotLink}>
-            <ThemedText type="link">Forgot Password?</ThemedText>
-          </Link>
+            {/* Password Input */}
+            <AnimatedThemedView style={[styles.inputContainer, passwordInputAnimatedStyle]}>
+              <ThemedView
+                style={[
+                  styles.inputWrapper,
+                  {
+                    borderColor: inputBorderColor,
+                    backgroundColor: inputBackgroundColor,
+                  },
+                ]}>
+                <Lock size={20} color={iconColor} style={styles.inputIcon} />
+                <Controller
+                  control={control}
+                  name="password"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      placeholder="Enter your password"
+                      placeholderTextColor={placeholderColor}
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      secureTextEntry
+                      autoCapitalize="none"
+                      autoComplete="password"
+                      autoCorrect={false}
+                    />
+                  )}
+                />
+              </ThemedView>
+              {errors.password && (
+                <ThemedText style={styles.errorText}>{errors.password.message}</ThemedText>
+              )}
+            </AnimatedThemedView>
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.button,
-              { opacity: pressed ? 0.8 : 1 },
-            ]}
-            onPress={handleLogin}>
-            <ThemedText style={styles.buttonText}>Sign In</ThemedText>
-          </Pressable>
+            {/* Forgot Password Link */}
+            <Animated.View style={forgotLinkAnimatedStyle}>
+              <Link href={PublicRoutes.FORGOT_PASSWORD} style={styles.forgotLink}>
+                <ThemedText style={styles.forgotPasswordText}>Forgot Password?</ThemedText>
+              </Link>
+            </Animated.View>
 
-          <ThemedView style={styles.signupContainer}>
-            <ThemedText>Don't have an account? </ThemedText>
-            <Link href={PublicRoutes.REGISTER}>
-              <ThemedText type="link">Sign Up</ThemedText>
-            </Link>
+            {/* Sign In Button */}
+            <AnimatedPressable
+              style={[styles.signInButton, signInButtonAnimatedStyle, buttonPressStyle]}
+              onPress={() => {
+                buttonPressScale.value = withSequence(
+                  withTiming(0.95, { duration: 100 }),
+                  withSpring(1, { damping: 15, stiffness: 150 })
+                );
+                handleSubmit(onSubmit)();
+              }}
+              disabled={isSubmitting}>
+              <LinearGradient
+                colors={['#60A5FA', '#3B82F6']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.signInGradient}>
+                <Text style={styles.signInButtonText}>
+                  {isSubmitting ? 'Signing In...' : 'Sign In'}
+                </Text>
+              </LinearGradient>
+            </AnimatedPressable>
+
+            {/* Divider */}
+            <AnimatedThemedView style={[styles.dividerContainer, dividerAnimatedStyle]}>
+              <ThemedView style={[styles.dividerLine, { backgroundColor: borderColor }]} />
+              <ThemedText style={[styles.dividerText, { color: iconColor }]}>
+                or continue with
+              </ThemedText>
+              <ThemedView style={[styles.dividerLine, { backgroundColor: borderColor }]} />
+            </AnimatedThemedView>
+
+            {/* Social Login Buttons */}
+            <ThemedView style={styles.socialButtons}>
+              {/* Apple Button */}
+              <AnimatedPressable
+                style={[
+                  styles.googleButton,
+                  {
+                    borderColor,
+                    backgroundColor: inputBackgroundColor,
+                  },
+                  googleButtonAnimatedStyle,
+                  buttonPressStyle,
+                ]}
+                onPress={() => handleButtonPress(handleAppleLogin)}>
+                <ThemedView style={styles.socialButtonContent}>
+                  <ThemedView style={styles.iconWrapper}>
+                    <AppleIcon width={20} height={24} fill="#FFFFFF" />
+                  </ThemedView>
+                  <Text style={[styles.googleButtonText, { color: textColor }]}>
+                  Continue with Apple</Text>
+                </ThemedView>
+              </AnimatedPressable>
+
+              {/* Google Button */}
+              <AnimatedPressable
+                style={[
+                  styles.googleButton,
+                  {
+                    borderColor,
+                    backgroundColor: inputBackgroundColor,
+                  },
+                  googleButtonAnimatedStyle,
+                  buttonPressStyle,
+                ]}
+                onPress={() => handleButtonPress(handleGoogleLogin)}>
+                <ThemedView style={styles.socialButtonContent}>
+                  <ThemedView style={styles.iconWrapper}>
+                    <GoogleIcon width={20} height={20} />
+                  </ThemedView>
+                  <Text style={[styles.googleButtonText, { color: textColor }]}>
+                    Continue with Google
+                  </Text>
+                </ThemedView>
+              </AnimatedPressable>
+            </ThemedView>
           </ThemedView>
         </ThemedView>
-      </ThemedView>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -94,18 +403,35 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
-    flex: 1,
-    padding: 24,
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
+  },
+  content: {
+    padding: 24,
+    minHeight: '100%',
+    justifyContent: 'center',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 32,
+    marginTop: 8,
+  },
+  backButtonText: {
+    marginLeft: 8,
+    fontSize: 16,
+  },
+  header: {
+    marginBottom: 32,
   },
   title: {
     marginBottom: 8,
-    textAlign: 'center',
+    fontSize: 32,
+    fontWeight: '700',
   },
   subtitle: {
-    marginBottom: 32,
-    textAlign: 'center',
+    fontSize: 16,
     opacity: 0.7,
   },
   form: {
@@ -119,34 +445,105 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  input: {
-    height: 50,
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 12,
     paddingHorizontal: 16,
+    height: 56,
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  input: {
+    flex: 1,
     fontSize: 16,
+    padding: 0,
+  },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
   },
   forgotLink: {
     alignSelf: 'flex-end',
     marginBottom: 24,
   },
-  button: {
-    backgroundColor: '#0a7ea4',
-    height: 50,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
+  forgotPasswordText: {
+    color: '#3B82F6',
+    fontSize: 14,
+    fontWeight: '500',
   },
-  buttonText: {
-    color: '#fff',
+  signInButton: {
+    width: '100%',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 32,
+  },
+  signInGradient: {
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+  },
+  signInButtonText: {
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
-  signupContainer: {
+  buttonPressed: {
+    opacity: 0.8,
+  },
+  dividerContainer: {
     flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 14,
+  },
+  socialButtons: {
+    gap: 12,
+  },
+  appleButton: {
+    backgroundColor: '#1C1C1E',
+    height: 56,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  googleButton: {
+    height: 56,
+    borderRadius: 12,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  socialButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconWrapper: {
+    marginRight: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  socialButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  googleButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
