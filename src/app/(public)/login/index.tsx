@@ -26,8 +26,9 @@ import { useEffect } from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { PublicRoutes } from '@/constants/routes';
+import { PublicRoutes, PrivateRoutes } from '@/constants/routes';
 import { loginSchema, type LoginFormData } from '@/schemas';
+import { useSignIn } from '@/services/auth/auth.services';
 import { images } from '@/constants/images';
 
 const AppleIcon = images.appleLogo;
@@ -126,7 +127,7 @@ export default function LoginScreen() {
   const {
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -135,16 +136,18 @@ export default function LoginScreen() {
     },
   });
 
-  const onSubmit = async (data: LoginFormData) => {
-    try {
-      // TODO: Implement actual login logic
-      console.log('Login data:', data);
-      Alert.alert('Success', 'Login successful!');
-      // TODO: Redirect to dashboard after login
-      // router.replace(PrivateRoutes.DASHBOARD);
-    } catch {
-      Alert.alert('Error', 'Failed to login. Please try again.');
-    }
+  const { mutate: signIn, isPending: isSubmitting, error: loginError } = useSignIn();
+
+  const onSubmit = (data: LoginFormData) => {
+    signIn(data, {
+      onSuccess: () => {
+        Alert.alert('Success', 'Login successful!');
+        router.replace(PrivateRoutes.DASHBOARD);
+      },
+      onError: (error: Error) => {
+        Alert.alert('Error', error.message || 'Failed to login. Please try again.');
+      },
+    });
   };
 
   const handleAppleLogin = () => {

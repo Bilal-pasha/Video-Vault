@@ -26,9 +26,10 @@ import { useEffect } from "react";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { PublicRoutes } from "@/constants/routes";
+import { PublicRoutes, PrivateRoutes } from "@/constants/routes";
 import { registerSchema, type RegisterFormData } from "@/schemas";
 import { images } from "@/constants/images";
+import { useSignUp } from "@/services/auth/auth.services";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const AnimatedThemedView = Animated.createAnimatedComponent(ThemedView);
@@ -156,7 +157,7 @@ export default function RegisterScreen() {
   const {
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -166,16 +167,18 @@ export default function RegisterScreen() {
     },
   });
 
-  const onSubmit = async (data: RegisterFormData) => {
-    try {
-      // TODO: Implement actual registration logic
-      console.log("Registration data:", data);
-      Alert.alert("Success", "Account created successfully!");
-      // TODO: Redirect to dashboard after registration
-      // router.replace(PrivateRoutes.DASHBOARD);
-    } catch {
-      Alert.alert("Error", "Failed to create account. Please try again.");
-    }
+  const { mutate: signUp, isPending: isSubmitting } = useSignUp();
+
+  const onSubmit = (data: RegisterFormData) => {
+    signUp(data, {
+      onSuccess: () => {
+        Alert.alert("Success", "Account created successfully!");
+        router.replace(PrivateRoutes.DASHBOARD);
+      },
+      onError: (error: Error) => {
+        Alert.alert("Error", error.message || "Failed to create account. Please try again.");
+      },
+    });
   };
 
   const handleAppleLogin = () => {
@@ -222,11 +225,6 @@ export default function RegisterScreen() {
   const dividerAnimatedStyle = useAnimatedStyle(() => ({
     opacity: dividerOpacity.value,
     transform: [{ scale: dividerScale.value }],
-  }));
-
-  const appleButtonAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: appleButtonOpacity.value,
-    transform: [{ translateY: appleButtonTranslateY.value }],
   }));
 
   const googleButtonAnimatedStyle = useAnimatedStyle(() => ({
