@@ -10,7 +10,10 @@
     "experiments": {
       "tsconfigPaths": true
     },
-    "plugins": ["expo-router", "expo-web-browser"],
+    "plugins": [
+      "expo-router",
+      "expo-web-browser"
+    ],
     "orientation": "portrait",
     "icon": "./src/assets/images/icon.png",
     "userInterfaceStyle": "light",
@@ -19,11 +22,15 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.video-mobile-application.app",
-      "associatedDomains": ["applinks:online2.video-mobile-application.com"],
+      "associatedDomains": [
+        "applinks:online2.video-mobile-application.com"
+      ],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -34,7 +41,7 @@
         "backgroundImage": "./src/assets/images/android-icon-background.png",
         "monochromeImage": "./src/assets/images/android-icon-monochrome.png"
       },
-      "package": "com.video-mobile-application.app",
+      "package": "com.bilal_pasha.videomobileapplication",
       "intentFilters": [
         {
           "action": "VIEW",
@@ -48,16 +55,19 @@
               "scheme": "video-mobile-application"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "fc3c9412-84be-46b2-adc6-347d8d6f4a44"
+        "projectId": "9fe4a6a9-8c26-45dc-913b-0a395233b9c6"
       }
     },
-    "owner": "video-mobile-application_technologies"
+    "owner": "bilal_pasha"
   }
 }

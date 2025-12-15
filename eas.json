@@ -1,10 +1,15 @@
 {
-    "build": {
-      "development": {
-        "android": {
-          "buildType": "apk",
-          "gradleCommand": ":app:assembleDebug"
-        }
+  "build": {
+    "development": {
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
+      }
+    },
+    "production": {
+      "android": {
+        "buildType": "app-bundle"
       }
     }
   }
+}
