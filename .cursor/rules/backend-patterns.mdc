@@ -1,0 +1,74 @@
+---
+globs: backend/**/*.ts
+---
+# Backend Patterns and Conventions
+
+This is a NestJS application with the following structure:
+
+## Entry Points and Modules
+- Main entry: [backend/src/main.ts](mdc:backend/src/main.ts)
+- Root module: [backend/src/app.module.ts](mdc:backend/src/app.module.ts)
+- Feature modules under `backend/src/api/` (auth, user, tadas, etc.)
+
+## Module Structure
+Each feature module should follow this pattern:
+```
+api/
+  feature-name/
+    feature-name.controller.ts
+    feature-name.service.ts
+    feature-name.module.ts
+    dto/
+      create-feature.dto.ts
+      update-feature.dto.ts
+    guards/
+    decorators/
+    interfaces/
+    types/
+```
+
+## Controllers
+- Use proper HTTP decorators (`@Get()`, `@Post()`, `@Patch()`, `@Delete()`)
+- Implement proper status codes and response types
+- Use DTOs for request/response validation
+- Add Swagger documentation with `@ApiTags()`, `@ApiOperation()`, `@ApiResponse()`
+
+## Services
+- Keep business logic in services, not controllers
+- Use dependency injection with `@Injectable()`
+- Return proper response types matching API documentation
+- Handle errors appropriately and throw HTTP exceptions
+
+## DTOs and Validation
+- Use class-validator decorators for validation
+- Create separate DTOs for create, update, and response
+- Use `@IsOptional()`, `@IsString()`, `@IsEmail()`, etc.
+- Implement proper transformation with `@Transform()`
+
+## Database
+- Use TypeORM entities extending `BaseEntity`
+- Implement proper relationships
+- Use migrations for schema changes
+- Follow naming conventions (snake_case for columns)
+
+## Authentication & Authorization
+- Use JWT strategy for authentication
+- Implement role-based guards for authorization
+- Use custom decorators for user extraction
+
+## Error Handling
+- Use global exception filters
+- Return consistent error responses
+- Log errors appropriately
+
+## API Documentation
+- Keep [api-doc.md](mdc:api-doc.md) as source of truth
+- Ensure all endpoints match documented contracts
+- Use proper HTTP methods and status codes
+
+### Required updates to api-doc.md
+- When adding, changing, or removing any endpoint, update `api-doc.md` in the same PR.
+- Reflect all request/response bodies, status codes, headers, and query params with concise examples.
+- Keep global sections (Base URL, Authentication, Response format, Error responses) accurate when related behavior changes.
+- If Swagger decorators or DTOs change the public contract, mirror those changes in `api-doc.md`.
+- Code review rule: PRs touching `backend/src/api/**` should include an `api-doc.md` diff (or a note explaining why no doc change is needed).

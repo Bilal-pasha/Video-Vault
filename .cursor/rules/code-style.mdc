@@ -1,0 +1,15 @@
+---
+globs: *.ts,*.tsx
+---
+# Code Style Rules
+
+- Keep imports ordered and grouped (external, internal)
+- Prefer explicit return types on exported functions/components
+- Avoid `any`; use precise types or generics
+- Use enums and constants over string literals (e.g., `DesignationEnum`)
+- Keep components small and focused; extract helpers where needed
+- No hard-coded API URLs; use constants
+- Prefer early returns over deep nesting
+- Avoid unnecessary `try/catch`; only where exceptions are expected
+- Run Prettier; fix lints before committing
+

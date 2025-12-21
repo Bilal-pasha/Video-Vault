@@ -1,0 +1,25 @@
+---
+globs: frontend/src/components/**/*.ts,frontend/src/components/**/*.tsx
+---
+# UI Components Guidelines
+
+General:
+- Use shadcn/ui primitives from `components/ui` and shared patterns from `components/app-ui`
+- Keep components controlled/stateless when possible; lift state to pages
+- Ensure accessibility: ARIA labels, keyboard navigation, focus management
+
+MultiSelect (`components/app-ui/multi-select.tsx`):
+- Use `Command` for search; set `CommandItem.value` to display text (`option.name`) so search works
+- Do not nest `<button>` inside shadcn `Button` (avoid hydration errors). Use a `div` with `role="button"`, `tabIndex=0`, and `onKeyDown` for Enter/Space
+- Props: `options`, `selected`, `onChange`, `placeholder`, `searchPlaceholder`, `emptyText`, `maxHeight`, `disabled`
+- Selected items are shown as `Badge` chips with removable affordance
+
+Confirmation:
+- Use `ConfirmationModal` for destructive actions; wire `onConfirm`/`onCancel`
+
+Pagination:
+- Use `PaginationControls` with `currentPage` and `totalPages` from `response.meta`
+
+Skeletons:
+- Use `Skeleton` for loading states; ensure layout stability
+

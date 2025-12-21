@@ -10,6 +10,7 @@ import {
     ApiResponse,
 } from './auth.types';
 import { DJANGO_API_ENDPOINTS } from '@/utils/api.endpoints';
+import { STORAGE_KEYS } from '@/utils/asyncStorage';
 
 /**
  * Authentication Service Class
@@ -29,9 +30,9 @@ class AuthService {
 
             if (response.data.success && response.data.data) {
                 // Store tokens
-                await AsyncStorage.setItem('authToken', response.data.data.token);
+                await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, response.data.data.token);
                 if (response.data.data.refreshToken) {
-                    await AsyncStorage.setItem('refreshToken', response.data.data.refreshToken);
+                    await AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, response.data.data.refreshToken);
                 }
             }
 
@@ -53,9 +54,9 @@ class AuthService {
 
             if (response.data.success && response.data.data) {
                 // Store tokens
-                await AsyncStorage.setItem('authToken', response.data.data.token);
+                await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, response.data.data.token);
                 if (response.data.data.refreshToken) {
-                    await AsyncStorage.setItem('refreshToken', response.data.data.refreshToken);
+                    await AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, response.data.data.refreshToken);
                 }
             }
 
@@ -110,8 +111,8 @@ class AuthService {
             console.error('Logout error:', error);
         } finally {
             // Clear local storage
-            await AsyncStorage.removeItem('authToken');
-            await AsyncStorage.removeItem('refreshToken');
+            await AsyncStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+            await AsyncStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
         }
     }
 
@@ -132,7 +133,7 @@ class AuthService {
      */
     async refreshToken(): Promise<ApiResponse<{ token: string; refreshToken?: string }>> {
         try {
-            const refreshToken = await AsyncStorage.getItem('refreshToken');
+            const refreshToken = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
             if (!refreshToken) {
                 throw new Error('No refresh token available');
             }
@@ -143,9 +144,9 @@ class AuthService {
             );
 
             if (response.data.success && response.data.data) {
-                await AsyncStorage.setItem('authToken', response.data.data.token);
+                await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, response.data.data.token);
                 if (response.data.data.refreshToken) {
-                    await AsyncStorage.setItem('refreshToken', response.data.data.refreshToken);
+                    await AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, response.data.data.refreshToken);
                 }
             }
 
@@ -159,7 +160,7 @@ class AuthService {
      * Check if user is authenticated
      */
     async isAuthenticated(): Promise<boolean> {
-        const token = await AsyncStorage.getItem('authToken');
+        const token = await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
         return !!token;
     }
 }

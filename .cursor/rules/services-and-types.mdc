@@ -1,0 +1,15 @@
+---
+globs: frontend/src/services/**/*.ts
+---
+# Service Layer and Types
+
+Source of truth: [api-doc.md](mdc:api-doc.md). Keep functions, payloads, and responses aligned with it.
+
+- Centralize API calls per domain (e.g., `tada.service.ts`, `user.service.ts`)
+- Export corresponding React Query hooks (e.g., `useUsers`, `useCreateUser`)
+- Use `API_URLS_PATHS` and `APP_URLS_PATHS` from `frontend/src/constants/urls.ts` (no hard-coded paths)
+- Pagination: accept `page`, `limit`, and pass through to endpoints; surface `meta` in responses
+- Types: define response interfaces to match actual API (e.g., `data: T[]`, top-level `meta`, `links`)
+- Mutations: invalidate relevant queries in `onSuccess`
+- Error types: prefer a shared `ApiError` type where applicable
+

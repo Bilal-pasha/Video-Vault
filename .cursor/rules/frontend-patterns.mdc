@@ -1,0 +1,31 @@
+---
+globs: frontend/**/*.ts,frontend/**/*.tsx
+---
+# Frontend Page and UI Patterns
+
+Use these patterns across pages:
+
+- Layout: `PageWrapper.Root`, `PageHeader.Root`, `PageHeaderTitle.Root`, optional `PageHeaderAction.Root`
+- Titles: use `useDocumentTitle('Page Title')`
+- Data fetching: React Query hooks from `src/services/**`
+- Confirmation: `ConfirmationModal` for destructive actions
+- Pagination: `PaginationControls` with `meta.currentPage` and `meta.totalPages`
+- Loading/Empty/Error: Skeletons for loading; clear empty and error states using `Alert`
+
+Rendering helpers:
+- Prefer dedicated render functions, e.g., `renderUsers(users: User[])`
+- Avoid inline complex JSX in return; extract to helpers
+
+Forms:
+- Use `react-hook-form` + `zodResolver`
+- Components: `FormComponent`, `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormMessage`
+- Show API validation errors via `Alert` and field-level `form.setError`
+
+Toasts and navigation:
+- Use `toast` from `sonner` for success/error
+- Use `useRouter` from `next/navigation` for redirects
+
+Styling:
+- Use shadcn/ui components and variants (e.g., `Badge` variants: `secondary`, `destructive`, `outline`)
+- Avoid hard-coded color classes; prefer design tokens (`text-primary`, `text-muted-foreground`)
+

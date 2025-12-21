@@ -1,0 +1,20 @@
+---
+alwaysApply: true
+---
+# Project Structure and Entry Points
+
+This repo is a monorepo with `backend/` (NestJS) and `frontend/` (Next.js App Router).
+
+- Frontend entry: `frontend/src/app/layout.tsx` and route files under `frontend/src/app/`
+- Backend entry: `backend/src/main.ts`, root module `backend/src/app.module.ts`
+
+Important frontend directories:
+- UI building blocks: `frontend/src/components/ui/`
+- App UI patterns: `frontend/src/components/app-ui/` (e.g., `page-header`, `page-wrapper`, `confirmation-modal`, `pagination`)
+- Feature pages: `frontend/src/components/pages/**`
+- Services and hooks: `frontend/src/services/**`
+- Constants and URLs: `frontend/src/constants/**`
+- Hooks: `frontend/src/hooks/**`
+
+API docs live at [api-doc.md](mdc:api-doc.md) at repo root and are the source of truth for service types and endpoints.
+
