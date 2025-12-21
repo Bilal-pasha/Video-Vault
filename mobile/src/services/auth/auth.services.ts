@@ -9,7 +9,7 @@ import {
     AuthResponse,
     ApiResponse,
 } from './auth.types';
-import { DJANGO_API_ENDPOINTS } from '@/utils/api.endpoints';
+import { API_ENDPOINTS } from '@/utils/api.endpoints';
 import { STORAGE_KEYS } from '@/utils/asyncStorage';
 
 /**
@@ -24,7 +24,7 @@ class AuthService {
     async register(data: RegisterRequest): Promise<ApiResponse<AuthResponse['data']>> {
         try {
             const response = await httpNextPublic.post<ApiResponse<AuthResponse['data']>>(
-                DJANGO_API_ENDPOINTS.AUTH_SIGNUP,
+                API_ENDPOINTS.AUTH_SIGNUP,
                 data
             );
 
@@ -48,7 +48,7 @@ class AuthService {
     async login(data: LoginRequest): Promise<ApiResponse<AuthResponse['data']>> {
         try {
             const response = await httpNextPublic.post<ApiResponse<AuthResponse['data']>>(
-                DJANGO_API_ENDPOINTS.AUTH_LOGIN,
+                API_ENDPOINTS.AUTH_LOGIN,
                 data
             );
 
@@ -74,7 +74,7 @@ class AuthService {
     ): Promise<ApiResponse<{ message: string }>> {
         try {
             const response = await httpNextPublic.post<ApiResponse<{ message: string }>>(
-                DJANGO_API_ENDPOINTS.AUTH_FORGOT_PASSWORD,
+                API_ENDPOINTS.AUTH_FORGOT_PASSWORD,
                 data
             );
             return response.data;
@@ -91,7 +91,7 @@ class AuthService {
     ): Promise<ApiResponse<{ message: string }>> {
         try {
             const response = await httpNextPublic.post<ApiResponse<{ message: string }>>(
-                DJANGO_API_ENDPOINTS.AUTH_RESET_PASSWORD,
+                API_ENDPOINTS.AUTH_RESET_PASSWORD,
                 data
             );
             return response.data;
@@ -105,7 +105,7 @@ class AuthService {
      */
     async logout(): Promise<void> {
         try {
-            await httpNextPublic.post(DJANGO_API_ENDPOINTS.AUTH_LOGOUT);
+            await httpNextPublic.post(API_ENDPOINTS.AUTH_LOGOUT);
         } catch (error) {
             // Continue with logout even if API call fails
             console.error('Logout error:', error);
@@ -121,7 +121,7 @@ class AuthService {
      */
     async getCurrentUser(): Promise<ApiResponse<AuthResponse['data']>> {
         try {
-            const response = await httpNextPublic.get<ApiResponse<AuthResponse['data']>>(DJANGO_API_ENDPOINTS.AUTH_ME);
+            const response = await httpNextPublic.get<ApiResponse<AuthResponse['data']>>(API_ENDPOINTS.AUTH_ME);
             return response.data;
         } catch (error) {
             throw error;
@@ -139,7 +139,7 @@ class AuthService {
             }
 
             const response = await httpNextPublic.post<ApiResponse<{ token: string; refreshToken?: string }>>(
-                DJANGO_API_ENDPOINTS.AUTH_TOKEN_REFRESH,
+                API_ENDPOINTS.AUTH_TOKEN_REFRESH,
                 { refreshToken }
             );
 

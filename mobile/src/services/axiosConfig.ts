@@ -1,61 +1,23 @@
-import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
-import { djangoApiBaseUrl, nextBackendApiBaseUrl } from '@/utils/env';
+import { backendApiBaseUrl } from '@/utils/env';
 import { PublicRoutes } from '@/constants/routes';
 
-import { DJANGO_API_ENDPOINTS } from '@/utils/api.endpoints';
+import { API_ENDPOINTS } from '@/utils/api.endpoints';
 import { getItem, multiRemove, setItem, STORAGE_KEYS } from '@/utils/asyncStorage/index';
-
-/**
- * Extract tokens from Set-Cookie header in response
- * @param response - Axios response object
- * @returns Object with access_token and refresh_token if found
- */
-export const extractTokensFromCookies = (
-  response: AxiosResponse
-): { accessToken: string | null; refreshToken: string | null } => {
-  const setCookieHeader = response.headers['set-cookie'] || response.headers['Set-Cookie'];
-  if (!setCookieHeader) {
-    return { accessToken: null, refreshToken: null };
-  }
-
-  // Handle both array and string formats
-  const cookieString = Array.isArray(setCookieHeader)
-    ? setCookieHeader.join(', ')
-    : setCookieHeader;
-
-  let accessToken: string | null = null;
-  let refreshToken: string | null = null;
-
-  // Parse cookies - extract token values (everything between name= and first semicolon)
-  const accessTokenMatch = cookieString.match(/access_token=([^;]+)/);
-  const refreshTokenMatch = cookieString.match(/refresh_token=([^;]+)/);
-
-  if (accessTokenMatch && accessTokenMatch[1]) {
-    accessToken = accessTokenMatch[1].trim();
-  }
-
-  if (refreshTokenMatch && refreshTokenMatch[1]) {
-    refreshToken = refreshTokenMatch[1].trim();
-  }
-
-  return { accessToken, refreshToken };
-};
-
-// Next.js Backend API instance (for Next.js API routes)
-export const httpNextPublic: AxiosInstance = axios.create({
-  baseURL: nextBackendApiBaseUrl,
-});
 
 // Public axios instance for unauthenticated requests
 export const httpPublic: AxiosInstance = axios.create({
-  baseURL: djangoApiBaseUrl,
+  baseURL: backendApiBaseUrl,
 });
 
 // Private axios instance for authenticated requests
 export const httpPrivate: AxiosInstance = axios.create({
-  baseURL: djangoApiBaseUrl,
+  baseURL: backendApiBaseUrl,
 });
+
+// Alias for backward compatibility
+export const httpNextPublic = httpPublic;
 
 // Request interceptor to attach auth token
 httpPrivate.interceptors.request.use(
@@ -82,7 +44,7 @@ const redirectToSignInPage = async (): Promise<void> => {
 
 export const userSignOutFn = async (): Promise<void> => {
   try {
-    await httpPrivate.post(DJANGO_API_ENDPOINTS.AUTH_LOGOUT);
+    await httpPrivate.post(API_ENDPOINTS.AUTH_LOGOUT);
   } catch {
     // Continue with sign out even if API call fails
   } finally {
@@ -98,18 +60,23 @@ export const refreshAccessTokenFn = async (): Promise<unknown> => {
       return null;
     }
 
-    const response = await httpPublic.post(DJANGO_API_ENDPOINTS.AUTH_TOKEN_REFRESH, {
-      refresh: refreshToken,
+    const response = await httpPublic.post<{
+      success: boolean;
+      message: string;
+      data: {
+        token: string;
+        refreshToken?: string;
+      };
+    }>(API_ENDPOINTS.AUTH_TOKEN_REFRESH, {
+      refreshToken,
     });
 
-    // Extract tokens from Set-Cookie header
-    const { accessToken, refreshToken: newRefreshToken } = extractTokensFromCookies(response);
-
-    if (accessToken) {
-      await setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
-    }
-    if (newRefreshToken) {
-      await setItem(STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken);
+    // Extract tokens from response body (NestJS returns JSON, not cookies)
+    if (response.data.success && response.data.data) {
+      await setItem(STORAGE_KEYS.ACCESS_TOKEN, response.data.data.token);
+      if (response.data.data.refreshToken) {
+        await setItem(STORAGE_KEYS.REFRESH_TOKEN, response.data.data.refreshToken);
+      }
     }
 
     return response;

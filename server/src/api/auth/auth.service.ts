@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -39,7 +43,7 @@ export class AuthService {
     const savedUser = await this.userRepository.save(user);
 
     // Generate tokens
-    const tokens = await this.generateTokens(savedUser);
+    const tokens = this.generateTokens(savedUser);
 
     return {
       success: true,
@@ -71,7 +75,7 @@ export class AuthService {
     }
 
     // Generate tokens
-    const tokens = await this.generateTokens(user);
+    const tokens = this.generateTokens(user);
 
     return {
       success: true,
@@ -88,20 +92,65 @@ export class AuthService {
     return this.userRepository.findOne({ where: { id: userId } });
   }
 
-  async generateTokens(user: User): Promise<{ accessToken: string; refreshToken: string }> {
+  async refreshToken(
+    refreshToken: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    try {
+      // Verify refresh token
+      const payload = this.jwtService.verify<{ sub: string; email: string }>(
+        refreshToken,
+        {
+          secret: this.configService.get<string>(
+            'JWT_REFRESH_SECRET',
+            'your-refresh-secret-key',
+          ),
+        },
+      );
+
+      // Get user from token
+      const user = await this.validateUser(payload.sub);
+      if (!user) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      // Generate new tokens
+      return this.generateTokens(user);
+    } catch {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+  }
+
+  generateTokens(user: User): { accessToken: string; refreshToken: string } {
     const payload = {
       sub: user.id,
       email: user.email,
     };
 
+    const jwtSecret = this.configService.get<string>(
+      'JWT_SECRET',
+      'your-secret-key',
+    );
+    const jwtExpiresIn = this.configService.get<string>('JWT_EXPIRES_IN', '1h');
+
+    const refreshSecret = this.configService.get<string>(
+      'JWT_REFRESH_SECRET',
+      'your-refresh-secret-key',
+    );
+    const refreshExpiresIn = this.configService.get<string>(
+      'JWT_REFRESH_EXPIRES_IN',
+      '7d',
+    );
+
+    // @ts-expect-error - JWT library type definition issue with expiresIn string type
     const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('JWT_SECRET', 'your-secret-key'),
-      expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '1h'),
+      secret: jwtSecret,
+      expiresIn: jwtExpiresIn,
     });
 
+    // @ts-expect-error - JWT library type definition issue with expiresIn string type
     const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('JWT_REFRESH_SECRET', 'your-refresh-secret-key'),
-      expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d'),
+      secret: refreshSecret,
+      expiresIn: refreshExpiresIn,
     });
 
     return { accessToken, refreshToken };
@@ -118,4 +167,3 @@ export class AuthService {
     };
   }
 }
-

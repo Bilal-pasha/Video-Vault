@@ -10,7 +10,11 @@ export class UserResponseDto {
   @ApiProperty({ example: 'john.doe@example.com' })
   email: string;
 
-  @ApiProperty({ example: 'https://example.com/avatar.jpg', required: false, nullable: true })
+  @ApiProperty({
+    example: 'https://example.com/avatar.jpg',
+    required: false,
+    nullable: true,
+  })
   avatar: string | null;
 
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
@@ -34,4 +38,3 @@ export class AuthResponseDto {
     refreshToken?: string;
   };
 }
-
