@@ -1,0 +1,9 @@
+{
+    # Disable automatic HTTPS (handled upstream or not required)
+    auto_https off
+}
+
+# Backend API service
+:8000 {
+    reverse_proxy video-app-backend:8000
+}
