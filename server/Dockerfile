@@ -27,26 +27,25 @@ RUN apk add --no-cache wget
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --only=production
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nestjs -u 1001
+# Copy and make scripts executable
+COPY start.sh ./start.sh
+COPY migrate.sh ./migrate.sh
+RUN chmod +x ./start.sh ./migrate.sh
 
-# Change ownership
-RUN chown -R nestjs:nodejs /app
-USER nestjs
+# Use node user (exists in node:20-alpine)
+USER node
 
 # Expose port
-EXPOSE 3000
+EXPOSE 8000
 
-# Health check
+# Health check - Fixed port to 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8000/health || exit 1
 
-# Start the application
-CMD ["node", "dist/main.js"]
-
+# run migrations and then start the application
+CMD ["bash", "./start.sh"]

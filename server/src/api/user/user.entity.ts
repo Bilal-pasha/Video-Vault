@@ -25,6 +25,13 @@ export class User {
   @Column({ type: 'varchar', length: 500, nullable: true })
   avatar: string | null;
 
+  @Column({
+    type: 'varchar',
+    length: 50,
+    default: 'user',
+  })
+  role: string;
+
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt: Date;
 
