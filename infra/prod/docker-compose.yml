@@ -92,13 +92,20 @@ services:
     image: caddy:2-alpine
     container_name: video-app-caddy
     restart: unless-stopped
+    environment:
+      # Domain configuration for SSL
+      BACKEND_DOMAIN: ${BACKEND_DOMAIN:-localhost}
+      CADDY_EMAIL: ${CADDY_EMAIL:-admin@example.com}
     ports:
+      - "80:80"
+      - "443:443"
       - "${BACKEND_PORT:-8000}:8000"
       - "${PGADMIN_PORT:-5050}:5050"
     volumes:
       - ./config/Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
+      - caddy_logs:/var/log/caddy
     networks:
       - video-app-network
     depends_on:
@@ -119,5 +126,7 @@ volumes:
   caddy_data:
     driver: local
   caddy_config:
+    driver: local
+  caddy_logs:
     driver: local
 
