@@ -66,7 +66,7 @@ Create a `.env` file in `infra/dev/` with:
 ```env
 # Server Configuration
 NODE_ENV=development
-BACKEND_PORT=8000
+SERVER_PORT=8000
 
 # Database Configuration
 POSTGRES_USER=postgres
