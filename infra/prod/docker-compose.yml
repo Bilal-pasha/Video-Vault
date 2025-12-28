@@ -3,14 +3,19 @@ services:
     image: postgres:16-alpine
     container_name: video-app-postgres
     restart: unless-stopped
-    env_file:
-      - ../../server/.env
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: video_app
+      POSTGRES_PORT: 5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - video-app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d video_app"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -19,8 +24,10 @@ services:
     image: dpage/pgadmin4:latest
     container_name: video-app-pgadmin
     restart: unless-stopped
-    env_file:
-      - ../../server/.env
+    environment:
+      PGADMIN_EMAIL: admin@admin.com
+      PGADMIN_PASSWORD: admin
+      PGADMIN_PORT: "5050"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     networks:
@@ -33,11 +40,14 @@ services:
     image: redis:7-alpine
     container_name: video-app-redis
     restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: redis
+      REDIS_PORT: 6379
     volumes:
       - redis_data:/data
     networks:
       - video-app-network
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD} --port ${REDIS_PORT}
+    command: redis-server --appendonly yes --requirepass redis --port 6379
     healthcheck:
       test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
       interval: 10s
@@ -50,8 +60,26 @@ services:
       dockerfile: Dockerfile
     container_name: video-app-server
     restart: unless-stopped
-    env_file:
-      - ../../server/.env
+    environment:
+      NODE_ENV: development
+      PORT: 8000
+      SERVER_PORT: 8000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: video_app
+      POSTGRES_PORT: 5432
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      JWT_EXPIRES_IN: 1h
+      JWT_REFRESH_SECRET: your-super-secret-refresh-jwt-key-change-in-production
+      JWT_REFRESH_EXPIRES_IN: 7d
+      REDIS_PASSWORD: redis
+      REDIS_PORT: 6379
+      PGADMIN_EMAIL: admin@admin.com
+      PGADMIN_PASSWORD: admin
+      PGADMIN_PORT: 5050
+      BACKEND_API_BASE_URL: http://localhost:8000
     networks:
       - video-app-network
     depends_on:
@@ -70,8 +98,9 @@ services:
     image: caddy:2-alpine
     container_name: video-app-caddy
     restart: unless-stopped
-    env_file:
-      - ../../server/.env
+    environment:
+      SERVER_PORT: 8000
+      PGADMIN_PORT: 5050
     ports:
       - "80:80"
       - "443:443"
@@ -85,7 +114,7 @@ services:
     networks:
       - video-app-network
     depends_on:
-      - backend
+      - server
       - pgadmin
 
 networks:
