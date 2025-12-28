@@ -21,7 +21,7 @@
     "typeorm": "typeorm-ts-node-commonjs",
     "migration:generate": "npm run typeorm -- migration:generate -d src/database/data-source.cli.ts",
     "migration:create": "npm run typeorm -- migration:create",
-    "migration:run": "ts-node -r tsconfig-paths/register src/scripts/run-migrations.ts",
+    "migration:run": "npm run typeorm -- --dataSource=src/database/data-source.cli.ts migration:run",
     "migration:run:fake": "npm run typeorm -- --dataSource=src/database/data-source.cli.ts migration:run --fake",
     "migration:revert": "npm run typeorm -- --dataSource=src/database/data-source.cli.ts migration:revert",
     "migration:show": "npm run typeorm -- --dataSource=src/database/data-source.cli.ts migration:show"

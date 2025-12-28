@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { httpNextPublic } from '../axiosConfig';
+import { AxiosError } from 'axios';
+import { httpNextPublic, httpPrivate } from '../axiosConfig';
 import {
     LoginRequest,
     RegisterRequest,
@@ -8,16 +9,40 @@ import {
     ResetPasswordRequest,
     AuthResponse,
     ApiResponse,
+    ApiError,
 } from './auth.types';
 import { API_ENDPOINTS } from '@/utils/api.endpoints';
 import { STORAGE_KEYS } from '@/utils/asyncStorage';
+
+/**
+ * Extract error message from axios error response
+ */
+const extractErrorMessage = (error: unknown): string => {
+    if (error instanceof AxiosError) {
+        const apiError = error.response?.data as ApiError | undefined;
+        if (apiError?.message) {
+            return apiError.message;
+        }
+        if (apiError?.errors) {
+            // Extract first validation error
+            const firstError = Object.values(apiError.errors)[0];
+            if (Array.isArray(firstError) && firstError.length > 0) {
+                return firstError[0];
+            }
+        }
+        return error.message || 'An unexpected error occurred';
+    }
+    if (error instanceof Error) {
+        return error.message;
+    }
+    return 'An unexpected error occurred';
+};
 
 /**
  * Authentication Service Class
  * Handles all authentication-related API calls
  */
 class AuthService {
-
     /**
      * Register a new user
      */
@@ -38,7 +63,8 @@ class AuthService {
 
             return response.data;
         } catch (error) {
-            throw error;
+            const errorMessage = extractErrorMessage(error);
+            throw new Error(errorMessage);
         }
     }
 
@@ -62,7 +88,8 @@ class AuthService {
 
             return response.data;
         } catch (error) {
-            throw error;
+            const errorMessage = extractErrorMessage(error);
+            throw new Error(errorMessage);
         }
     }
 
@@ -79,7 +106,8 @@ class AuthService {
             );
             return response.data;
         } catch (error) {
-            throw error;
+            const errorMessage = extractErrorMessage(error);
+            throw new Error(errorMessage);
         }
     }
 
@@ -96,7 +124,8 @@ class AuthService {
             );
             return response.data;
         } catch (error) {
-            throw error;
+            const errorMessage = extractErrorMessage(error);
+            throw new Error(errorMessage);
         }
     }
 
@@ -105,7 +134,8 @@ class AuthService {
      */
     async logout(): Promise<void> {
         try {
-            await httpNextPublic.post(API_ENDPOINTS.AUTH_LOGOUT);
+            // Use authenticated client for logout
+            await httpPrivate.post(API_ENDPOINTS.AUTH_LOGOUT);
         } catch (error) {
             // Continue with logout even if API call fails
             console.error('Logout error:', error);
@@ -121,10 +151,11 @@ class AuthService {
      */
     async getCurrentUser(): Promise<ApiResponse<AuthResponse['data']>> {
         try {
-            const response = await httpNextPublic.get<ApiResponse<AuthResponse['data']>>(API_ENDPOINTS.AUTH_ME);
+            const response = await httpPrivate.get<ApiResponse<AuthResponse['data']>>(API_ENDPOINTS.AUTH_ME);
             return response.data;
         } catch (error) {
-            throw error;
+            const errorMessage = extractErrorMessage(error);
+            throw new Error(errorMessage);
         }
     }
 
@@ -152,7 +183,8 @@ class AuthService {
 
             return response.data;
         } catch (error) {
-            throw error;
+            const errorMessage = extractErrorMessage(error);
+            throw new Error(errorMessage);
         }
     }
 

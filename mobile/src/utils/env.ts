@@ -1,1 +1,1 @@
-export const backendApiBaseUrl = process.env.BACKEND_API_BASE_URL || 'http://localhost:3000';
+export const backendApiBaseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
