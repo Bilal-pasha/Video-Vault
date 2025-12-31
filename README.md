@@ -48,3 +48,42 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+# GitHub Actions Workflows
+
+This directory contains GitHub Actions workflows for CI/CD.
+
+## Workflows
+
+### `deploy.yml`
+
+Automated build and deployment workflow for Google Cloud Platform (GCE).
+
+**Features:**
+- Builds Docker images for the server
+- Pushes images to Google Artifact Registry
+- Deploys to GCE e2-micro instance
+- Automated SSH key management
+- Health checks and verification
+
+**Triggers:**
+- Push to `main` or `master` branch
+- Manual trigger via GitHub Actions UI
+
+**Required Secrets:**
+See [GITHUB_ACTIONS_DEPLOYMENT.md](../docs/GITHUB_ACTIONS_DEPLOYMENT.md) for complete setup instructions.
+
+## Quick Start
+
+1. Set up Google Cloud resources (see deployment docs)
+2. Configure GitHub Secrets
+3. Push to main branch or trigger manually
+4. Monitor deployment in Actions tab
+
+## Workflow Status
+
+Check workflow status badges in your README:
+```markdown
+![Deploy](https://github.com/USERNAME/REPO/workflows/Build%20and%20Deploy%20to%20GCE/badge.svg)
+```
+
