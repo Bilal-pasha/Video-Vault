@@ -51,7 +51,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "./infra/prod/docker-compose.prod.yml"
-          target: "/home/${{ secrets.EC2_USERNAME }}/video-app/docker-compose.prod.yml"
+          target: "/home/${{ secrets.EC2_USERNAME }}/video-app"
 
       # Step 3: Deploy with Docker Compose
       - name: Deploy application
