@@ -1,12 +1,10 @@
-name: Deploy to GCE
+name: Deploy to AWS EC2
 
 on:
   workflow_run:
     workflows: ["Build Docker Image"]
     types:
       - completed
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       environment:
@@ -18,7 +16,7 @@ on:
           - production
           - staging
       image-url:
-        description: 'Image URL to deploy (e.g., ghcr.io/org/repo/server:latest). Leave empty to use latest build.'
+        description: 'Image URL to deploy (optional, defaults to latest build)'
         required: false
         type: string
 
@@ -28,228 +26,53 @@ env:
 
 jobs:
   deploy:
-    name: Deploy to GCE Instance
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
-    environment:
-      name: ${{ github.event.inputs.environment || 'production' }}
-
-    permissions:
-      contents: read
-      packages: read
-
-    env:
-      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-      GCE_INSTANCE_NAME: ${{ secrets.GCE_INSTANCE_NAME }}
-      GCE_INSTANCE_ZONE: ${{ secrets.GCE_INSTANCE_ZONE }}
-      GCE_SSH_USER: ${{ secrets.GCE_SSH_USER }}
+    if: github.ref == 'refs/heads/main'
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set image URL
-        id: image-url
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.image-url }}" ]; then
-            # Use manually provided image URL
-            echo "image-url=${{ github.event.inputs.image-url }}" >> $GITHUB_OUTPUT
-            echo "Using manually specified image: ${{ github.event.inputs.image-url }}"
-          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            # Manual trigger without image, use latest
-            IMAGE_URL="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-            echo "image-url=${IMAGE_URL}" >> $GITHUB_OUTPUT
-            echo "Using latest image: ${IMAGE_URL}"
-          else
-            # Triggered by build workflow (workflow_run), use latest tag
-            # The build workflow always tags with 'latest' for main branch
-            IMAGE_URL="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-            echo "image-url=${IMAGE_URL}" >> $GITHUB_OUTPUT
-            echo "Using latest image from build workflow: ${IMAGE_URL}"
-          fi
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+      - name: Ensure target directory exists on EC2
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          credentials_json: ${{ env.GCP_SA_KEY }}
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            mkdir -p /root/video-app
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+      - name: Copy docker-compose.prod.yml to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "/infra/prod/docker-compose.prod.yml"
+          target: "/root/video-app"
 
-      - name: Add SSH key to known hosts
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ env.GCE_INSTANCE_NAME }}.c.${{ env.GCP_PROJECT_ID }}.internal 2>/dev/null || true
-          # If using external IP, add it to known hosts
-          gcloud compute instances describe ${{ env.GCE_INSTANCE_NAME }} \
-            --zone=${{ env.GCE_INSTANCE_ZONE }} \
-            --format='get(networkInterfaces[0].accessConfigs[0].natIP)' > external_ip.txt 2>/dev/null || echo "" > external_ip.txt
-          if [ -s external_ip.txt ]; then
-            EXTERNAL_IP=$(cat external_ip.txt)
-            if [ ! -z "$EXTERNAL_IP" ]; then
-              ssh-keyscan -H $EXTERNAL_IP >> ~/.ssh/known_hosts 2>/dev/null || true
-            fi
-          fi
-
-      - name: Generate SSH key pair
-        id: ssh-key
-        run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          ssh-keygen -t ed25519 -f ~/.ssh/gce_key -N "" -C "github-actions" -q
-          echo "public_key<<EOF" >> $GITHUB_OUTPUT
-          cat ~/.ssh/gce_key.pub >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Add SSH key to GCE instance
-        run: |
-          # Get the public key
-          PUBLIC_KEY=$(cat ~/.ssh/gce_key.pub)
-          
-          # Try to get existing SSH keys
-          EXISTING_KEYS=$(gcloud compute instances describe ${{ env.GCE_INSTANCE_NAME }} \
-            --zone=${{ env.GCE_INSTANCE_ZONE }} \
-            --format='get(metadata.items[?key==`ssh-keys`].value)' 2>/dev/null || echo "")
-          
-          # Add new key to existing keys
-          if [ ! -z "$EXISTING_KEYS" ]; then
-            NEW_KEYS="${EXISTING_KEYS}"$'\n'"${{ env.GCE_SSH_USER }}:${PUBLIC_KEY}"
-          else
-            NEW_KEYS="${{ env.GCE_SSH_USER }}:${PUBLIC_KEY}"
-          fi
-          
-          # Add the SSH key to the instance metadata
-          echo "$NEW_KEYS" | gcloud compute instances add-metadata ${{ env.GCE_INSTANCE_NAME }} \
-            --zone=${{ env.GCE_INSTANCE_ZONE }} \
-            --metadata-from-file ssh-keys=/dev/stdin
-
-      - name: Wait for SSH key propagation
-        run: sleep 10
-
-      - name: Copy configuration files
-        id: copy-files
-        run: |
-          # Determine connection method (internal or external IP)
-          INTERNAL_IP=$(gcloud compute instances describe ${{ env.GCE_INSTANCE_NAME }} \
-            --zone=${{ env.GCE_INSTANCE_ZONE }} \
-            --format='get(networkInterfaces[0].networkIP)')
-          
-          EXTERNAL_IP=$(gcloud compute instances describe ${{ env.GCE_INSTANCE_NAME }} \
-            --zone=${{ env.GCE_INSTANCE_ZONE }} \
-            --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
-          
-          # Use external IP if available, otherwise use internal
-          if [ -z "$EXTERNAL_IP" ] || [ "$EXTERNAL_IP" = "None" ]; then
-            SSH_HOST=$INTERNAL_IP
-            echo "Using internal IP: $SSH_HOST"
-          else
-            SSH_HOST=$EXTERNAL_IP
-            echo "Using external IP: $SSH_HOST"
-          fi
-          
-          echo "ssh_host=$SSH_HOST" >> $GITHUB_OUTPUT
-          
-          # Ensure SSH key is ready
-          chmod 600 ~/.ssh/gce_key
-          
-          # Wait a bit for SSH key to propagate
-          sleep 5
-          
-          # Create directories
-          ssh -i ~/.ssh/gce_key \
-            -o StrictHostKeyChecking=no \
-            -o UserKnownHostsFile=/dev/null \
-            -o ConnectTimeout=10 \
-            ${{ env.GCE_SSH_USER }}@${SSH_HOST} "mkdir -p /opt/video-app/config" || true
-          
-          # Copy docker-compose.yml
-          scp -i ~/.ssh/gce_key \
-            -o StrictHostKeyChecking=no \
-            -o UserKnownHostsFile=/dev/null \
-            infra/prod/docker-compose.yml \
-            ${{ env.GCE_SSH_USER }}@${SSH_HOST}:/opt/video-app/docker-compose.yml
-          
-          # Copy Caddyfile
-          scp -i ~/.ssh/gce_key \
-            -o StrictHostKeyChecking=no \
-            -o UserKnownHostsFile=/dev/null \
-            infra/prod/config/Caddyfile \
-            ${{ env.GCE_SSH_USER }}@${SSH_HOST}:/opt/video-app/config/Caddyfile
-
-      - name: Deploy application on GCE instance
-        id: deploy
-        run: |
-          # Get SSH host from previous step
-          SSH_HOST="${{ steps.copy-files.outputs.ssh_host }}"
-          IMAGE_URL="${{ steps.image-url.outputs.image-url }}"
-          
-          echo "Deploying image: $IMAGE_URL"
-          
-          # Execute deployment on the instance
-          ssh -i ~/.ssh/gce_key \
-            -o StrictHostKeyChecking=no \
-            -o UserKnownHostsFile=/dev/null \
-            -o ConnectTimeout=30 \
-            ${{ env.GCE_SSH_USER }}@${SSH_HOST} << ENDSSH
-            #!/bin/bash
+      - name: Deploy using Docker Compose
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
             set -e
-            
-            export IMAGE_URL="${IMAGE_URL}"
-            export GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
-            
-            cd /opt/video-app || { mkdir -p /opt/video-app/config && cd /opt/video-app; }
-            
-            # Authenticate Docker to GHCR
-            echo "\${GITHUB_TOKEN}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
-            
-            # Update docker-compose.yml with the new image
-            if [ -f docker-compose.yml ]; then
-              # Backup existing compose file
-              cp docker-compose.yml "docker-compose.yml.backup.\$(date +%Y%m%d_%H%M%S)" || true
-              
-              # Replace SERVER_IMAGE placeholder or update existing image line for server service
-              sed -i 's|image:.*SERVER_IMAGE.*|image: '"${IMAGE_URL}"'|g' docker-compose.yml
-              
-              # If no image line exists for server, add it after the server: line
-              if ! grep -A 5 "^  server:" docker-compose.yml | grep -q "image:"; then
-                sed -i '/^  server:/a\    image: '"${IMAGE_URL}" docker-compose.yml
-              fi
-            fi
-            
-            # Pull latest images
-            docker pull "\${IMAGE_URL}" || echo "Warning: Failed to pull image"
-            
-            # Stop existing containers
-            docker-compose down --timeout 30 || docker compose down --timeout 30 || true
-            
-            # Pull all images and start containers
-            docker-compose pull || docker compose pull || true
-            docker-compose up -d || docker compose up -d
-            
-            # Wait for services to be healthy
-            echo "Waiting for services to start..."
-            sleep 15
-            
-            # Check status
-            docker-compose ps || docker compose ps
-            ENDSSH
-          
-          echo "image_url=${IMAGE_URL}" >> $GITHUB_OUTPUT
+            cd /root/video-app
 
-      - name: Verify deployment
-        run: |
-          SSH_HOST="${{ steps.copy-files.outputs.ssh_host }}"
-          
-          ssh -i ~/.ssh/gce_key \
-            -o StrictHostKeyChecking=no \
-            -o UserKnownHostsFile=/dev/null \
-            -o ConnectTimeout=10 \
-            ${{ env.GCE_SSH_USER }}@${SSH_HOST} << 'ENDSSH'
-            cd /opt/video-app || exit 1
-            echo "=== Container Status ==="
-            docker-compose ps || docker compose ps
-            echo ""
-            echo "=== Recent Server Logs ==="
-            docker-compose logs --tail=50 server || docker compose logs --tail=50 server
-            ENDSSH
+            # Use provided image-url if set, else use latest build
+            IMAGE="${{ github.event.inputs.image-url }}"
+            if [ -z "$IMAGE" ]; then
+              REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+              IMAGE="ghcr.io/${REPO_LOWER}/server:${{ github.sha }}"
+            fi
+
+            echo "📥 Pull image: $IMAGE"
+            docker pull $IMAGE
+
+            echo "♻️ Restart services"
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+
+            echo "🧹 Cleanup unused images"
+            docker image prune -f
