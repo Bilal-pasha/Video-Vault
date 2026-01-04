@@ -50,7 +50,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "./infra/prod/docker-compose.prod.yml"
+          source: "infra/prod"
           target: "/home/${{ secrets.EC2_USERNAME }}/video-app"
 
       # Step 3: Deploy with Docker Compose
@@ -63,7 +63,7 @@ jobs:
           port: 22
           script: |
             set -e
-            cd /home/${{ secrets.EC2_USERNAME }}/video-app
+            cd /home/${{ secrets.EC2_USERNAME }}/video-app/infra/prod
 
             IMAGE_TAG="${{ github.event.inputs.image-tag || 'latest' }}"
             IMAGE_URL="${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
