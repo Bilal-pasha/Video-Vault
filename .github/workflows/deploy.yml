@@ -50,7 +50,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "infra/prod"
+          source: "infra/prod/"
           target: "/home/${{ secrets.EC2_USERNAME }}/video-app"
 
       # Step 3: Deploy with Docker Compose
