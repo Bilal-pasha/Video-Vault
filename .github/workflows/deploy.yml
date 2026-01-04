@@ -15,8 +15,8 @@ on:
         options:
           - production
           - staging
-      image-url:
-        description: 'Image URL to deploy (optional, defaults to latest build)'
+      image-tag:
+        description: 'Docker image tag to deploy (defaults to latest)'
         required: false
         type: string
 
@@ -28,51 +28,53 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Ensure target directory exists on EC2
+      # Step 1: Ensure deployment directory exists
+      - name: Prepare deployment directory
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
           script: |
-            mkdir -p /root/video-app
+            mkdir -p /home/${{ secrets.EC2_USERNAME }}/video-app
 
-      - name: Copy docker-compose.prod.yml to EC2
+      # Step 2: Copy docker-compose.prod.yml
+      - name: Copy Docker Compose file
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "/infra/prod/docker-compose.prod.yml"
-          target: "/root/video-app"
+          source: "./infra/prod/docker-compose.prod.yml"
+          target: "/home/${{ secrets.EC2_USERNAME }}/video-app/docker-compose.prod.yml"
 
-      - name: Deploy using Docker Compose
+      # Step 3: Deploy with Docker Compose
+      - name: Deploy application
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
           script: |
             set -e
-            cd /root/video-app
+            cd /home/${{ secrets.EC2_USERNAME }}/video-app
 
-            # Use provided image-url if set, else use latest build
-            IMAGE="${{ github.event.inputs.image-url }}"
-            if [ -z "$IMAGE" ]; then
-              REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-              IMAGE="ghcr.io/${REPO_LOWER}/server:${{ github.sha }}"
-            fi
+            IMAGE_TAG="${{ github.event.inputs.image-tag || 'latest' }}"
+            IMAGE_URL="${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
 
-            echo "📥 Pull image: $IMAGE"
-            docker pull $IMAGE
+            echo "📥 Pulling Docker image: $IMAGE_URL"
+            docker pull "$IMAGE_URL"
 
-            echo "♻️ Restart services"
+            echo "♻️ Updating containers with Docker Compose"
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
-            echo "🧹 Cleanup unused images"
+            echo "🧹 Cleaning up unused images"
             docker image prune -f
+
+            echo "✅ Deployment completed successfully"
