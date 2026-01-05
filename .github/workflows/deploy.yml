@@ -67,11 +67,22 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
-          envs: REGISTRY,IMAGE_NAME,GITHUB_SHA
+          # We pass these variables so they are available in the shell script below
+          envs: REGISTRY,IMAGE_NAME,GITHUB_ACTOR,GITHUB_TOKEN
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          envs: REGISTRY,IMAGE_NAME
           script: |
             set -e
             cd /home/${{ secrets.EC2_USERNAME }}/video-app
 
+            # 1. Authenticate with GHCR
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # 2. Construct the Image URL
             IMAGE_TAG="${{ github.event.inputs.image-tag || 'latest' }}"
             IMAGE_URL="$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
 
@@ -79,9 +90,13 @@ jobs:
             docker pull "$IMAGE_URL"
 
             echo "♻️ Updating containers with Docker Compose"
+            # Using --quiet-pull as we already pulled the image above
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
             echo "🧹 Cleaning up unused images"
             docker image prune -f
+            
+            # 3. Optional: Logout for security
+            docker logout ghcr.io
 
             echo "✅ Deployment completed successfully"
