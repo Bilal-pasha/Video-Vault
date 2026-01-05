@@ -41,7 +41,12 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            mkdir -p /home/${{ secrets.EC2_USERNAME }}/video-app
+            # Create the folder
+            sudo mkdir -p /home/${{ secrets.EC2_USERNAME }}/video-app
+            # Take ownership (in case it was created by root previously)
+            sudo chown -R ${{ secrets.EC2_USERNAME }}:${{ secrets.EC2_USERNAME }} /home/${{ secrets.EC2_USERNAME }}/video-app
+            # Ensure write permissions
+            chmod -R 755 /home/${{ secrets.EC2_USERNAME }}/video-app
 
       # Step 2: Copy docker-compose.prod.yml
       - name: Copy Docker Compose file
