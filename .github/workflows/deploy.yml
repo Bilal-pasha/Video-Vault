@@ -67,12 +67,13 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
+          envs: REGISTRY,IMAGE_NAME,GITHUB_SHA
           script: |
             set -e
             cd /home/${{ secrets.EC2_USERNAME }}/video-app
 
             IMAGE_TAG="${{ github.event.inputs.image-tag || 'latest' }}"
-            IMAGE_URL="${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+            IMAGE_URL="$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
 
             echo "📥 Pulling Docker image: $IMAGE_URL"
             docker pull "$IMAGE_URL"
