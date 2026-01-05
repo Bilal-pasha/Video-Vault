@@ -27,12 +27,12 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    # Recommended: only run if the build workflow actually succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 1: Ensure deployment directory exists
       - name: Prepare deployment directory
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -41,14 +41,10 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            # Create the folder
             sudo mkdir -p /home/${{ secrets.EC2_USERNAME }}/video-app
-            # Take ownership (in case it was created by root previously)
             sudo chown -R ${{ secrets.EC2_USERNAME }}:${{ secrets.EC2_USERNAME }} /home/${{ secrets.EC2_USERNAME }}/video-app
-            # Ensure write permissions
             chmod -R 755 /home/${{ secrets.EC2_USERNAME }}/video-app
 
-      # Step 2: Copy docker-compose.prod.yml
       - name: Copy Docker Compose file
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -59,28 +55,25 @@ jobs:
           target: "/home/${{ secrets.EC2_USERNAME }}/video-app"
           strip_components: 2
 
-      # Step 3: Deploy with Docker Compose
       - name: Deploy application
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          # We make these available as standard env vars for the action to pick up
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
-          # We pass these variables so they are available in the shell script below
-          envs: REGISTRY,IMAGE_NAME,GITHUB_ACTOR,GITHUB_TOKEN
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          envs: REGISTRY,IMAGE_NAME
+          # 'envs' tells the action which environment variables to "export" to the remote EC2 shell
+          envs: REGISTRY,IMAGE_NAME,GITHUB_TOKEN
           script: |
             set -e
             cd /home/${{ secrets.EC2_USERNAME }}/video-app
 
-            # 1. Authenticate with GHCR
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            # 1. Authenticate with GHCR 
+            # Note: We use the $GITHUB_TOKEN passed via envs
+            echo "$GITHUB_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             # 2. Construct the Image URL
             IMAGE_TAG="${{ github.event.inputs.image-tag || 'latest' }}"
@@ -90,13 +83,10 @@ jobs:
             docker pull "$IMAGE_URL"
 
             echo "♻️ Updating containers with Docker Compose"
-            # Using --quiet-pull as we already pulled the image above
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
             echo "🧹 Cleaning up unused images"
             docker image prune -f
             
-            # 3. Optional: Logout for security
             docker logout ghcr.io
-
             echo "✅ Deployment completed successfully"
