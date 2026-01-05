@@ -44,7 +44,7 @@ jobs:
             mkdir -p /home/${{ secrets.EC2_USERNAME }}/video-app
 
       # Step 2: Copy docker-compose.prod.yml
-     - name: Copy Docker Compose file
+      - name: Copy Docker Compose file
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
