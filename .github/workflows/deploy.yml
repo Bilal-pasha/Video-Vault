@@ -22,16 +22,19 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/server
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Recommended: only run if the build workflow actually succeeded
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # Converts "User/Repo" to "user/repo" for Docker compatibility
+      - name: Lowercase Image Name
+        run: |
+          echo "IMAGE_NAME_LOWER=${GITHUB_REPOSITORY,,}/server" >> $GITHUB_ENV
 
       - name: Prepare deployment directory
         uses: appleboy/ssh-action@v1.0.3
@@ -58,35 +61,31 @@ jobs:
       - name: Deploy application
         uses: appleboy/ssh-action@v1.0.3
         env:
-          # We make these available as standard env vars for the action to pick up
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
-          # 'envs' tells the action which environment variables to "export" to the remote EC2 shell
-          envs: REGISTRY,IMAGE_NAME,GITHUB_TOKEN
+          envs: REGISTRY,IMAGE_NAME_LOWER,GITHUB_TOKEN 
           script: |
             set -e
             cd /home/${{ secrets.EC2_USERNAME }}/video-app
 
-            # 1. Authenticate with GHCR 
-            # Note: We use the $GITHUB_TOKEN passed via envs
+            # Login to GHCR
             echo "$GITHUB_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            # 2. Construct the Image URL
+            # Determine Tag
             IMAGE_TAG="${{ github.event.inputs.image-tag || 'latest' }}"
-            IMAGE_URL="$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
+            IMAGE_URL="$REGISTRY/$IMAGE_NAME_LOWER:$IMAGE_TAG"
 
             echo "📥 Pulling Docker image: $IMAGE_URL"
             docker pull "$IMAGE_URL"
 
-            echo "♻️ Updating containers with Docker Compose"
+            echo "♻️ Updating containers"
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
-            echo "🧹 Cleaning up unused images"
+            echo "🧹 Cleaning up"
             docker image prune -f
-            
             docker logout ghcr.io
             echo "✅ Deployment completed successfully"
