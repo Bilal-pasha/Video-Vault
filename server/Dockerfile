@@ -29,7 +29,7 @@ COPY package*.json ./
 # Install only production dependencies
 RUN npm ci --only=production
 
-RUN npm install typeorm-ts-node-commonjs --location=global
+RUN npm install -g typeorm-ts-node-commonjs ts-node typescript
 
 
 # Copy built application from builder stage
