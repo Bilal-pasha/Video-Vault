@@ -26,8 +26,11 @@ RUN apk add --no-cache wget
 # Copy package files
 COPY package*.json ./
 
-# Install production + dev dependencies for migrations
-RUN npm ci
+# Install only production dependencies
+RUN npm ci --only=production
+
+RUN npm install typeorm-ts-node-commonjs --location=global
+
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
