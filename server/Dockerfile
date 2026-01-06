@@ -26,8 +26,8 @@ RUN apk add --no-cache wget
 # Copy package files
 COPY package*.json ./
 
-# Install only production dependencies
-RUN npm ci --only=production
+# Install production + dev dependencies for migrations
+RUN npm ci
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
