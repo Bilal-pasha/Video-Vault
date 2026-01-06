@@ -55,7 +55,7 @@ function createDatabaseConfig(params: DatabaseConfigParams): DataSourceOptions {
      * e.g. npm run typeorm -- schema:sync
      --dataSource=<datasource/path>
      */
-    synchronize: true,
+    synchronize: false,
     migrationsRun: false,
     logging: params.nodeEnv === 'development', // 'query', 'error', 'schema', 'warn', 'info', 'log'
     dropSchema: false,
