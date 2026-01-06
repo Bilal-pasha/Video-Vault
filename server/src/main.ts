@@ -31,7 +31,7 @@ async function bootstrap(): Promise<void> {
 
   // Get the port from the environment variables
   const configService = app.get(ConfigService);
-  const port = configService.get<number>('PORT', DEFAULT_PORT);
+  const port = configService.get<number>('SERVER_PORT', DEFAULT_PORT);
 
   // Setup Swagger
   const document = SwaggerModule.createDocument(app, swaggerConfig);
