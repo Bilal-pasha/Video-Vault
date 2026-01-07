@@ -15,19 +15,24 @@ services:
       timeout: 5s
       retries: 5
 
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: video-app-pgadmin
-    restart: unless-stopped
-    env_file:
-      - .env
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    networks:
-      - video-app-network
-    depends_on:
-      postgres:
-        condition: service_healthy
+pgadmin:
+  image: dpage/pgadmin4:latest
+  container_name: video-app-pgadmin
+  restart: unless-stopped
+  environment:
+    PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
+    PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    PGADMIN_CONFIG_SERVER_MODE: "False"
+    PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+  env_file:
+    - .env
+  volumes:
+    - pgadmin_data:/var/lib/pgadmin
+  networks:
+    - video-app-network
+  depends_on:
+    postgres:
+      condition: service_healthy
 
   redis:
     image: redis:7-alpine
