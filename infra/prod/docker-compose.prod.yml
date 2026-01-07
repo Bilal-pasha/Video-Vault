@@ -31,8 +31,8 @@ services:
     networks:
       - video-app-network
     depends_on:
-    postgres:
-      condition: service_healthy
+      postgres:
+        condition: service_healthy
 
   redis:
     image: redis:7-alpine
