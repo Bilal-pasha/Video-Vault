@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import type { Response } from 'express';
 import { COOKIE_NAMES } from '../common/constants/app.constants';
 
 /**

@@ -10,7 +10,7 @@ import {
   Req,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Response, Request } from 'express';
+import type { Response, Request } from 'express';
 import {
   ApiTags,
   ApiOperation,

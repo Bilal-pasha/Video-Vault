@@ -139,12 +139,14 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload, {
       secret: jwtSecret,
-      expiresIn: jwtExpiresIn,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expiresIn: jwtExpiresIn as any,
     });
 
     const refreshToken = this.jwtService.sign(payload, {
       secret: refreshSecret,
-      expiresIn: refreshExpiresIn,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expiresIn: refreshExpiresIn as any,
     });
 
     return { accessToken, refreshToken };
