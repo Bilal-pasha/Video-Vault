@@ -42,15 +42,13 @@ services:
       - .env
     networks:
       - video-app-network
-    ports:
-      - "127.0.0.1:8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/health || exit 1"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://server:8000/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
