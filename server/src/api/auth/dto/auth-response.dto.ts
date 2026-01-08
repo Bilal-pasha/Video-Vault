@@ -34,7 +34,5 @@ export class AuthResponseDto {
   @ApiProperty({ type: () => Object })
   data: {
     user: UserResponseDto;
-    token: string;
-    refreshToken?: string;
   };
 }

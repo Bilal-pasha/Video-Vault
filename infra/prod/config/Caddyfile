@@ -1,46 +1,44 @@
 {
-    # Email for Let's Encrypt certificate notifications
-    # Update this with your email for production
     email admin@example.com
-    
-    # Enable automatic HTTPS with Let's Encrypt
-    # For localhost: Caddy will use self-signed certificates
-    # For production domains: Caddy will automatically obtain Let's Encrypt certificates
 }
 
-# Backend API service
-# For development: localhost (self-signed cert)
-# For production: Replace with your actual domain (e.g., api.yourdomain.com)
-# To use a domain, change "localhost" to your domain and ensure DNS points to this server
-localhost {
-    # Reverse proxy to backend
-    reverse_proxy video-app-backend:8000 {
-        # Health check
-        health_uri /health
-        health_interval 30s
-        health_timeout 10s
+:80 {
+    # =========================
+    # API Routes → Backend
+    # =========================
+    handle /v1/api/* {
+        reverse_proxy server:8000 {
+            health_uri /health
+            health_interval 30s
+            health_timeout 10s
+        }
     }
-    
-    # Security headers
+
+    handle /health {
+        reverse_proxy server:8000
+    }
+
+    handle /api* {
+        reverse_proxy server:8000
+    }
+
+    # =========================
+    # Fallback
+    # =========================
+    handle {
+        respond "Not Found" 404
+    }
+
+    encode gzip zstd
+
     header {
-        # Enable HSTS (only for production domains)
-        # Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-        # Prevent clickjacking
         X-Frame-Options "DENY"
-        # XSS protection
         X-Content-Type-Options "nosniff"
-        # Content Security Policy
-        Content-Security-Policy "default-src 'self'"
-        # Remove server header
         -Server
     }
-    
-    # Logging
+
     log {
         output file /var/log/caddy/backend.log
         format json
     }
-    
-    # Enable compression
-    encode gzip zstd
 }

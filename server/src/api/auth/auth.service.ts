@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { User } from '../user/user.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { AuthResponseDto, UserResponseDto } from './dto/auth-response.dto';
+import { UserResponseDto } from './dto/auth-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -21,7 +21,10 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  async register(registerDto: RegisterDto): Promise<AuthResponseDto> {
+  async register(registerDto: RegisterDto): Promise<{
+    user: UserResponseDto;
+    tokens: { accessToken: string; refreshToken: string };
+  }> {
     const { email, name, password } = registerDto;
 
     // Check if user already exists
@@ -46,17 +49,15 @@ export class AuthService {
     const tokens = this.generateTokens(savedUser);
 
     return {
-      success: true,
-      message: 'Account created successfully',
-      data: {
-        user: this.mapUserToResponse(savedUser),
-        token: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-      },
+      user: this.mapUserToResponse(savedUser),
+      tokens,
     };
   }
 
-  async login(loginDto: LoginDto): Promise<AuthResponseDto> {
+  async login(loginDto: LoginDto): Promise<{
+    user: UserResponseDto;
+    tokens: { accessToken: string; refreshToken: string };
+  }> {
     const { email, password } = loginDto;
 
     // Find user by email
@@ -74,17 +75,12 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    // Generate tokens
+    // Generate tokens (will be set as cookies in controller)
     const tokens = this.generateTokens(user);
 
     return {
-      success: true,
-      message: 'Login successful',
-      data: {
-        user: this.mapUserToResponse(user),
-        token: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-      },
+      user: this.mapUserToResponse(user),
+      tokens,
     };
   }
 
@@ -141,13 +137,11 @@ export class AuthService {
       '7d',
     );
 
-    // @ts-expect-error - JWT library type definition issue with expiresIn string type
     const accessToken = this.jwtService.sign(payload, {
       secret: jwtSecret,
       expiresIn: jwtExpiresIn,
     });
 
-    // @ts-expect-error - JWT library type definition issue with expiresIn string type
     const refreshToken = this.jwtService.sign(payload, {
       secret: refreshSecret,
       expiresIn: refreshExpiresIn,
