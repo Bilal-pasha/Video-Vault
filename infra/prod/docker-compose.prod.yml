@@ -42,6 +42,8 @@ services:
       - .env
     networks:
       - video-app-network
+    ports:
+      - "127.0.0.1:8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
