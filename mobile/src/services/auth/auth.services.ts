@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AxiosError } from 'axios';
 import { httpNextPublic, httpPrivate } from '../axiosConfig';
 import {
@@ -12,7 +11,6 @@ import {
     ApiError,
 } from './auth.types';
 import { API_ENDPOINTS } from '@/utils/api.endpoints';
-import { STORAGE_KEYS } from '@/utils/asyncStorage';
 
 /**
  * Extract error message from axios error response
@@ -53,14 +51,6 @@ class AuthService {
                 data
             );
 
-            if (response.data.success && response.data.data) {
-                // Store tokens
-                await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, response.data.data.token);
-                if (response.data.data.refreshToken) {
-                    await AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, response.data.data.refreshToken);
-                }
-            }
-
             return response.data;
         } catch (error) {
             const errorMessage = extractErrorMessage(error);
@@ -77,14 +67,6 @@ class AuthService {
                 API_ENDPOINTS.AUTH_LOGIN,
                 data
             );
-
-            if (response.data.success && response.data.data) {
-                // Store tokens
-                await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, response.data.data.token);
-                if (response.data.data.refreshToken) {
-                    await AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, response.data.data.refreshToken);
-                }
-            }
 
             return response.data;
         } catch (error) {
@@ -139,10 +121,6 @@ class AuthService {
         } catch (error) {
             // Continue with logout even if API call fails
             console.error('Logout error:', error);
-        } finally {
-            // Clear local storage
-            await AsyncStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-            await AsyncStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
         }
     }
 
@@ -161,26 +139,13 @@ class AuthService {
 
     /**
      * Refresh access token
+     * Note: With cookie-based auth, refresh token is sent automatically via cookies
      */
-    async refreshToken(): Promise<ApiResponse<{ token: string; refreshToken?: string }>> {
+    async refreshToken(): Promise<ApiResponse<{ message: string }>> {
         try {
-            const refreshToken = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
-            if (!refreshToken) {
-                throw new Error('No refresh token available');
-            }
-
-            const response = await httpNextPublic.post<ApiResponse<{ token: string; refreshToken?: string }>>(
-                API_ENDPOINTS.AUTH_TOKEN_REFRESH,
-                { refreshToken }
+            const response = await httpNextPublic.post<ApiResponse<{ message: string }>>(
+                API_ENDPOINTS.AUTH_TOKEN_REFRESH
             );
-
-            if (response.data.success && response.data.data) {
-                await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, response.data.data.token);
-                if (response.data.data.refreshToken) {
-                    await AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, response.data.data.refreshToken);
-                }
-            }
-
             return response.data;
         } catch (error) {
             const errorMessage = extractErrorMessage(error);
@@ -190,10 +155,15 @@ class AuthService {
 
     /**
      * Check if user is authenticated
+     * Note: With cookie-based auth, we check by making an authenticated request
      */
     async isAuthenticated(): Promise<boolean> {
-        const token = await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-        return !!token;
+        try {
+            await this.getCurrentUser();
+            return true;
+        } catch {
+            return false;
+        }
     }
 }
 
@@ -214,7 +184,12 @@ export const useSignIn = () => {
             if (!response.success) {
                 throw new Error(response.message);
             }
-            return response.data;
+            // After successful login, fetch the current user to ensure we have the latest data
+            const userResponse = await authService.getCurrentUser();
+            if (!userResponse.success || !userResponse.data) {
+                throw new Error('Failed to fetch user data');
+            }
+            return userResponse.data;
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['user'] });
@@ -235,7 +210,12 @@ export const useSignUp = () => {
             if (!response.success) {
                 throw new Error(response.message);
             }
-            return response.data;
+            // After successful registration, fetch the current user to ensure we have the latest data
+            const userResponse = await authService.getCurrentUser();
+            if (!userResponse.success || !userResponse.data) {
+                throw new Error('Failed to fetch user data');
+            }
+            return userResponse.data;
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['user'] });
