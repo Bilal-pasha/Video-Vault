@@ -21,15 +21,15 @@ import Animated, {
   withDelay,
   withSequence,
 } from "react-native-reanimated";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { PublicRoutes, PrivateRoutes } from "@/constants/routes";
+import { PublicRoutes } from "@/constants/routes";
 import { registerSchema, type RegisterFormData } from "@/schemas";
 import { images } from "@/constants/images";
-import { useSignUp } from "@/services/auth/auth.services";
+import { useAuth } from "@/providers/AuthProvider";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const AnimatedThemedView = Animated.createAnimatedComponent(ThemedView);
@@ -39,6 +39,8 @@ const GoogleIcon = images.googleLogo;
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const { signUp, error: authError, clearError } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Animation values
   const backButtonOpacity = useSharedValue(0);
@@ -167,18 +169,17 @@ export default function RegisterScreen() {
     },
   });
 
-  const { mutate: signUp, isPending: isSubmitting } = useSignUp();
-
-  const onSubmit = (data: RegisterFormData) => {
-    signUp(data, {
-      onSuccess: () => {
-        Alert.alert("Success", "Account created successfully!");
-        router.replace(PrivateRoutes.DASHBOARD);
-      },
-      onError: (error: Error) => {
-        Alert.alert("Error", error.message || "Failed to create account. Please try again.");
-      },
-    });
+  const onSubmit = async (data: RegisterFormData) => {
+    clearError();
+    setIsSubmitting(true);
+    try {
+      const result = await signUp(data);
+      if (!result.success) {
+        Alert.alert("Error", result.message || "Failed to create account. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleAppleLogin = () => {

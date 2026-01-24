@@ -1,0 +1,64 @@
+import { IsString, IsUrl, IsOptional, IsIn, MaxLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+const SOURCES = ['instagram', 'facebook', 'twitter', 'tiktok', 'other'] as const;
+const CATEGORIES = [
+  'nature',
+  'cooking',
+  'food',
+  'sports',
+  'music',
+  'tech',
+  'entertainment',
+  'other',
+] as const;
+
+export class CreateLinkDto {
+  @ApiProperty({
+    example: 'https://www.instagram.com/p/ABC123/',
+    description: 'Shared social platform URL',
+  })
+  @IsString()
+  @IsUrl({}, { message: 'Please provide a valid URL' })
+  @MaxLength(2048)
+  url: string;
+
+  @ApiPropertyOptional({
+    example: 'instagram',
+    enum: SOURCES,
+    description: 'Platform the link came from',
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(SOURCES, { message: `source must be one of: ${SOURCES.join(', ')}` })
+  source?: (typeof SOURCES)[number];
+
+  @ApiPropertyOptional({
+    example: 'My favorite reel',
+    description: 'Optional title for the saved link',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  title?: string;
+
+  @ApiPropertyOptional({
+    example: 'nature',
+    enum: CATEGORIES,
+    description: 'Video/content category',
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(CATEGORIES, { message: `category must be one of: ${CATEGORIES.join(', ')}` })
+  category?: (typeof CATEGORIES)[number];
+
+  @ApiPropertyOptional({
+    example: 'https://example.com/thumb.jpg',
+    description: 'Thumbnail image URL (fallback: fetched from page metadata)',
+  })
+  @IsOptional()
+  @IsString()
+  @IsUrl({}, { message: 'thumbnailUrl must be a valid URL' })
+  @MaxLength(2048)
+  thumbnailUrl?: string;
+}

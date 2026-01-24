@@ -10,4 +10,6 @@ export const API_ENDPOINTS = {
   AUTH_RESEND_OTP: '/v1/api/auth/resend-otp',
   AUTH_SOCIAL_GOOGLE: '/v1/api/auth/google',
   AUTH_COMPLETE_PROFILE: '/v1/api/auth/complete-profile',
+  LINKS: '/v1/api/links',
+  LINKS_LIST: '/v1/api/links',
 } as const;

@@ -5,6 +5,8 @@ import { LoggerModule } from 'nestjs-pino';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './api/auth/auth.module';
+import { LinksModule } from './api/links/links.module';
+import { Link } from './api/links/link.entity';
 import { User } from './api/user/user.entity';
 
 @Module({
@@ -35,7 +37,7 @@ import { User } from './api/user/user.entity';
         username: configService.get<string>('POSTGRES_USER', 'postgres'),
         password: configService.get<string>('POSTGRES_PASSWORD', 'postgres'),
         database: configService.get<string>('POSTGRES_DB', 'video_app'),
-        entities: [User],
+        entities: [User, Link],
         migrations: ['dist/migrations/*.js'],
         migrationsRun: false,
         synchronize: configService.get<string>('NODE_ENV') !== 'production',
@@ -44,6 +46,7 @@ import { User } from './api/user/user.entity';
       inject: [ConfigService],
     }),
     AuthModule,
+    LinksModule,
   ],
   controllers: [AppController],
   providers: [AppService],

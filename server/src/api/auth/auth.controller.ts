@@ -22,6 +22,7 @@ import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -114,9 +115,12 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
   async refreshToken(
     @Req() req: Request,
+    @Body() body: RefreshTokenDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ success: boolean; message: string }> {
-    const refreshToken = req.cookies?.[COOKIE_NAMES.REFRESH_TOKEN];
+    // Support both cookie-based (web) and body-based (mobile) refresh tokens
+    const refreshToken =
+      req.cookies?.[COOKIE_NAMES.REFRESH_TOKEN] || body?.refreshToken;
 
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token not provided');
@@ -124,7 +128,7 @@ export class AuthController {
 
     const tokens = await this.authService.refreshToken(refreshToken);
     
-    // Set new HTTP-only cookies
+    // Set new HTTP-only cookies (for web clients)
     const { isProduction, accessTokenExpiresIn, refreshTokenExpiresIn } = this.getCookieConfig();
     setAuthCookies(res, tokens.accessToken, tokens.refreshToken, isProduction, accessTokenExpiresIn, refreshTokenExpiresIn);
 

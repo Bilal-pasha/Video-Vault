@@ -21,14 +21,14 @@ import Animated, {
   withDelay,
   withSequence,
 } from 'react-native-reanimated';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { PublicRoutes, PrivateRoutes } from '@/constants/routes';
+import { PublicRoutes } from '@/constants/routes';
 import { loginSchema, type LoginFormData } from '@/schemas';
-import { useSignIn } from '@/services/auth/auth.services';
+import { useAuth } from '@/providers/AuthProvider';
 import { images } from '@/constants/images';
 
 const AppleIcon = images.appleLogo;
@@ -39,6 +39,8 @@ const AnimatedThemedView = Animated.createAnimatedComponent(ThemedView);
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { signIn, error: authError, clearError } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Animation values
   const backButtonOpacity = useSharedValue(0);
@@ -136,18 +138,17 @@ export default function LoginScreen() {
     },
   });
 
-  const { mutate: signIn, isPending: isSubmitting, error: loginError } = useSignIn();
-
-  const onSubmit = (data: LoginFormData) => {
-    signIn(data, {
-      onSuccess: () => {
-        Alert.alert('Success', 'Login successful!');
-        router.replace(PrivateRoutes.DASHBOARD);
-      },
-      onError: (error: Error) => {
-        Alert.alert('Error', error.message || 'Failed to login. Please try again.');
-      },
-    });
+  const onSubmit = async (data: LoginFormData) => {
+    clearError();
+    setIsSubmitting(true);
+    try {
+      const result = await signIn(data);
+      if (!result.success) {
+        Alert.alert('Error', result.message || 'Failed to login. Please try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleAppleLogin = () => {

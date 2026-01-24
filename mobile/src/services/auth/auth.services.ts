@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { httpNextPublic, httpPrivate } from '../axiosConfig';
 import {
@@ -9,7 +9,10 @@ import {
     AuthResponse,
     ApiResponse,
     ApiError,
+    User,
 } from './auth.types';
+import { tokenStorage } from './token.storage';
+import { extractTokensFromCookies } from './cookie.utils';
 import { API_ENDPOINTS } from '@/utils/api.endpoints';
 
 /**
@@ -42,7 +45,8 @@ const extractErrorMessage = (error: unknown): string => {
  */
 class AuthService {
     /**
-     * Register a new user
+     * Register a new user.
+     * Extracts access & refresh tokens from Set-Cookie response headers and stores in AsyncStorage.
      */
     async register(data: RegisterRequest): Promise<ApiResponse<AuthResponse['data']>> {
         try {
@@ -50,6 +54,11 @@ class AuthService {
                 API_ENDPOINTS.AUTH_SIGNUP,
                 data
             );
+
+            const { accessToken, refreshToken } = extractTokensFromCookies(response);
+            if (accessToken && refreshToken) {
+                await tokenStorage.setTokens(accessToken, refreshToken);
+            }
 
             return response.data;
         } catch (error) {
@@ -59,7 +68,8 @@ class AuthService {
     }
 
     /**
-     * Login user
+     * Login user.
+     * Extracts access & refresh tokens from Set-Cookie response headers and stores in AsyncStorage.
      */
     async login(data: LoginRequest): Promise<ApiResponse<AuthResponse['data']>> {
         try {
@@ -67,6 +77,12 @@ class AuthService {
                 API_ENDPOINTS.AUTH_LOGIN,
                 data
             );
+
+            const { accessToken, refreshToken } = extractTokensFromCookies(response);
+            console.log('tokens', accessToken, refreshToken);
+            if (accessToken && refreshToken) {
+                await tokenStorage.setTokens(accessToken, refreshToken);
+            }
 
             return response.data;
         } catch (error) {
@@ -112,15 +128,15 @@ class AuthService {
     }
 
     /**
-     * Logout user
+     * Logout user. Calls logout API (Bearer), then clears tokens from AsyncStorage.
      */
     async logout(): Promise<void> {
         try {
-            // Use authenticated client for logout
             await httpPrivate.post(API_ENDPOINTS.AUTH_LOGOUT);
         } catch (error) {
-            // Continue with logout even if API call fails
             console.error('Logout error:', error);
+        } finally {
+            await tokenStorage.clearTokens();
         }
     }
 
@@ -138,14 +154,26 @@ class AuthService {
     }
 
     /**
-     * Refresh access token
-     * Note: With cookie-based auth, refresh token is sent automatically via cookies
+     * Refresh access token.
+     * Sends refresh token via Cookie header, parses new tokens from Set-Cookie, stores in AsyncStorage.
+     * Prefer relying on axios 401 interceptor for automatic refresh; use this for explicit refresh.
      */
     async refreshToken(): Promise<ApiResponse<{ message: string }>> {
         try {
+            const refresh = await tokenStorage.getRefreshToken();
+            if (!refresh) throw new Error('No refresh token');
+
             const response = await httpNextPublic.post<ApiResponse<{ message: string }>>(
-                API_ENDPOINTS.AUTH_TOKEN_REFRESH
+                API_ENDPOINTS.AUTH_TOKEN_REFRESH,
+                {},
+                { headers: { Cookie: `refresh_token=${refresh}` } }
             );
+
+            const { accessToken, refreshToken } = extractTokensFromCookies(response);
+            if (accessToken && refreshToken) {
+                await tokenStorage.setTokens(accessToken, refreshToken);
+            }
+
             return response.data;
         } catch (error) {
             const errorMessage = extractErrorMessage(error);
@@ -154,8 +182,7 @@ class AuthService {
     }
 
     /**
-     * Check if user is authenticated
-     * Note: With cookie-based auth, we check by making an authenticated request
+     * Check if user is authenticated (Bearer token in AsyncStorage; validated via /me).
      */
     async isAuthenticated(): Promise<boolean> {
         try {
@@ -172,8 +199,23 @@ export const authService = new AuthService();
 export default authService;
 
 /**
- * React Query hooks for auth services
+ * Shared queryFn for user profile. Fetches /me and returns User | null.
  */
+const userProfileQueryFn = async (): Promise<User | null> => {
+    const response = await authService.getCurrentUser();
+    if (!response.success) throw new Error(response.message);
+    return response.data?.user ?? null;
+};
+
+/**
+ * Fetch and cache current user. Use after login/register to populate user profile.
+ */
+export const useUserProfile = () => {
+    return useQuery<User | null, Error>({
+        queryKey: ['user'],
+        queryFn: userProfileQueryFn,
+    });
+};
 
 export const useSignIn = () => {
     const queryClient = useQueryClient();
@@ -181,19 +223,11 @@ export const useSignIn = () => {
     return useMutation<AuthResponse['data'], Error, LoginRequest>({
         mutationFn: async (data: LoginRequest) => {
             const response = await authService.login(data);
-            if (!response.success) {
-                throw new Error(response.message);
-            }
-            // After successful login, fetch the current user to ensure we have the latest data
-            const userResponse = await authService.getCurrentUser();
-            if (!userResponse.success || !userResponse.data) {
-                throw new Error('Failed to fetch user data');
-            }
-            return userResponse.data;
+            if (!response.success) throw new Error(response.message);
+            return response.data;
         },
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ['user'] });
-            queryClient.setQueryData(['user'], data);
+        onSuccess: async () => {
+            await queryClient.fetchQuery({ queryKey: ['user'], queryFn: userProfileQueryFn });
         },
         onError: (error: Error) => {
             console.error('Login error:', error);
@@ -207,19 +241,11 @@ export const useSignUp = () => {
     return useMutation<AuthResponse['data'], Error, RegisterRequest>({
         mutationFn: async (data: RegisterRequest) => {
             const response = await authService.register(data);
-            if (!response.success) {
-                throw new Error(response.message);
-            }
-            // After successful registration, fetch the current user to ensure we have the latest data
-            const userResponse = await authService.getCurrentUser();
-            if (!userResponse.success || !userResponse.data) {
-                throw new Error('Failed to fetch user data');
-            }
-            return userResponse.data;
+            if (!response.success) throw new Error(response.message);
+            return response.data;
         },
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ['user'] });
-            queryClient.setQueryData(['user'], data);
+        onSuccess: async () => {
+            await queryClient.fetchQuery({ queryKey: ['user'], queryFn: userProfileQueryFn });
         },
         onError: (error: Error) => {
             console.error('Registration error:', error);
