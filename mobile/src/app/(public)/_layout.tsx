@@ -7,12 +7,12 @@ export default function PublicLayout() {
         headerShown: false,
       }}>
       <Stack.Screen name="index" />
-      <Stack.Screen name="save" />
-      <Stack.Screen name="Welcome" />
-      <Stack.Screen name="Login" />
-      <Stack.Screen name="Register" />
-      <Stack.Screen name="ForgotPassword" />
-      <Stack.Screen name="ResetPassword" />
+      <Stack.Screen name="save/index" />
+      <Stack.Screen name="welcome/index" />
+      <Stack.Screen name="login/index" />
+      <Stack.Screen name="register/index" />
+      <Stack.Screen name="forgot-password/index" />
+      <Stack.Screen name="reset-password/index" />
     </Stack>
   );
 }
