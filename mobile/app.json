@@ -12,7 +12,21 @@
     },
     "plugins": [
       "expo-router",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-share-intent",
+        {
+          "iosActivationRules": {
+            "NSExtensionActivationSupportsWebURLWithMaxCount": 1,
+            "NSExtensionActivationSupportsWebPageWithMaxCount": 1,
+            "NSExtensionActivationSupportsFileWithMaxCount": 1
+          },
+          "androidIntentFilters": [
+            "text/*",
+            "*/*"
+          ]
+        }
+      ]
     ],
     "orientation": "portrait",
     "icon": "./src/assets/images/icon.png",
@@ -62,8 +76,14 @@
         },
         {
           "action": "android.intent.action.SEND",
-          "category": ["android.intent.category.DEFAULT"],
-          "data": [{ "mimeType": "text/plain" }]
+          "category": [
+            "android.intent.category.DEFAULT"
+          ],
+          "data": [
+            {
+              "mimeType": "text/plain"
+            }
+          ]
         }
       ]
     },
