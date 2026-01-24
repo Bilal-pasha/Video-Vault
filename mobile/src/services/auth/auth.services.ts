@@ -79,7 +79,6 @@ class AuthService {
             );
 
             const { accessToken, refreshToken } = extractTokensFromCookies(response);
-            console.log('tokens', accessToken, refreshToken);
             if (accessToken && refreshToken) {
                 await tokenStorage.setTokens(accessToken, refreshToken);
             }

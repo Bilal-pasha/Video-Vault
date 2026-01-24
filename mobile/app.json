@@ -56,6 +56,10 @@
         "monochromeImage": "./src/assets/images/android-icon-monochrome.png"
       },
       "package": "com.bilal_pasha.videomobileapplication",
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ],
       "intentFilters": [
         {
           "action": "VIEW",
