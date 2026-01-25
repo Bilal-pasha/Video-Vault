@@ -13,11 +13,28 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useEffect } from 'react';
 import { PublicRoutes } from '@/constants/routes';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
+const LIGHT_BG_GRADIENT = ['#F9FAFB', '#F3F4F6'] as const;
+const DARK_BG_GRADIENT = ['#1C1C1E', '#0D0D0E'] as const;
+const LIGHT_SECONDARY_GRADIENT = ['#FFFFFF', '#DBEAFE'] as const;
+const DARK_SECONDARY_GRADIENT = ['#2C2C2E', '#1C1C1E'] as const;
+
 export default function WelcomeScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme() ?? 'light';
+  const isDark = colorScheme === 'dark';
+
+  const textColor = useThemeColor({}, 'text');
+  const iconColor = useThemeColor({}, 'icon');
+  const tintColor = useThemeColor({}, 'tint');
+  const borderColor = useThemeColor(
+    { light: '#E5E7EB', dark: '#3A3A3C' },
+    'icon'
+  );
 
   // Animation values
   const iconScale = useSharedValue(0);
@@ -123,17 +140,27 @@ export default function WelcomeScreen() {
     setTimeout(callback, 150);
   };
 
+  const bgGradient = isDark ? DARK_BG_GRADIENT : LIGHT_BG_GRADIENT;
+  const secondaryGradient = isDark
+    ? DARK_SECONDARY_GRADIENT
+    : LIGHT_SECONDARY_GRADIENT;
+
   return (
     <LinearGradient
-      colors={['#F9FAFB', '#F3F4F6']}
+      colors={[...bgGradient]}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
       style={styles.container}>
       <View style={styles.content}>
         {/* App Icon */}
-        <Animated.View style={[styles.iconContainer, iconAnimatedStyle]}>
+        <Animated.View
+          style={[
+            styles.iconContainer,
+            iconAnimatedStyle,
+            isDark && styles.iconContainerDark,
+          ]}>
           <LinearGradient
-            colors={['#3B82F6', '#7C3AED']}
+            colors={['#60A5FA', '#3B82F6']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.iconGradient}>
@@ -143,26 +170,35 @@ export default function WelcomeScreen() {
 
         {/* App Name with Sparkle */}
         <Animated.View style={[styles.titleContainer, titleAnimatedStyle]}>
-          <Text style={styles.appName}>VideoVault</Text>
+          <Text style={[styles.appName, { color: textColor }]}>VideoVault</Text>
           <Animated.View style={sparkleAnimatedStyle}>
-            <Sparkles size={20} color="#3B82F6" strokeWidth={2} style={styles.sparkle} />
+            <Sparkles
+              size={20}
+              color={tintColor}
+              strokeWidth={2}
+              style={styles.sparkle}
+            />
           </Animated.View>
         </Animated.View>
 
         {/* Tagline */}
-        <Animated.Text style={[styles.tagline, taglineAnimatedStyle]}>
-          Save, organize, and discover your favorite videos in one beautiful place.
+        <Animated.Text
+          style={[styles.tagline, { color: iconColor }, taglineAnimatedStyle]}>
+          Save, organize, and discover your favorite videos in one beautiful
+          place.
         </Animated.Text>
 
         {/* Buttons */}
         <View style={styles.buttonContainer}>
           <Animated.View style={button1AnimatedStyle}>
             <AnimatedPressable
-             style={({ pressed }) => [
-              styles.signInButton,
-              pressed && styles.buttonPressed,
-            ]}
-              onPress={() => handleButtonPress(() => router.navigate(PublicRoutes.LOGIN))}>
+              style={({ pressed }) => [
+                styles.signInButton,
+                pressed && styles.buttonPressed,
+              ]}
+              onPress={() =>
+                handleButtonPress(() => router.navigate(PublicRoutes.LOGIN))
+              }>
               <LinearGradient
                 colors={['#60A5FA', '#3B82F6']}
                 start={{ x: 0, y: 0 }}
@@ -175,17 +211,24 @@ export default function WelcomeScreen() {
 
           <Animated.View style={button2AnimatedStyle}>
             <AnimatedPressable
-               style={({ pressed }) => [
-                styles.createAccountButton,
+              style={({ pressed }) => [
+                styles.signInButton,
                 pressed && styles.buttonPressed,
               ]}
-              onPress={() => handleButtonPress(() => router.push(PublicRoutes.REGISTER))}>
+              onPress={() =>
+                handleButtonPress(() => router.push(PublicRoutes.REGISTER))
+              }>
               <LinearGradient
-                colors={['#FFFFFF', '#DBEAFE']}
+                colors={[...secondaryGradient]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={styles.signInGradient}>
-                <Text style={styles.createAccountText}>Create Account</Text>
+                style={[
+                  styles.signInGradient,
+                  isDark && { borderWidth: 1, borderColor },
+                ]}>
+                <Text style={[styles.createAccountText, { color: tintColor }]}>
+                  Create Account
+                </Text>
               </LinearGradient>
             </AnimatedPressable>
           </Animated.View>
@@ -209,13 +252,15 @@ const styles = StyleSheet.create({
   iconContainer: {
     marginBottom: 32,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 8,
+  },
+  iconContainerDark: {
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 12,
   },
   iconGradient: {
     width: 120,
@@ -232,7 +277,6 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#1F2937',
     marginRight: 8,
   },
   sparkle: {
@@ -240,7 +284,6 @@ const styles = StyleSheet.create({
   },
   tagline: {
     fontSize: 16,
-    color: '#6B7280',
     textAlign: 'center',
     marginBottom: 48,
     paddingHorizontal: 16,
@@ -267,18 +310,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  createAccountButton: {
-    width: '100%',
-    height: 56,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#DBEAFE',
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   createAccountText: {
-    color: '#3B82F6',
     fontSize: 18,
     fontWeight: '600',
   },
