@@ -563,6 +563,10 @@ export function AddLinkSheet({
             style={[
               styles.footer,
               {
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
                 backgroundColor,
                 borderTopColor: borderColor,
                 paddingHorizontal: bodyPadding,
