@@ -131,6 +131,52 @@ export async function getFacebookThumbnailUrl(url: string): Promise<string | nul
 }
 
 /**
+ * Extract LinkedIn video/post thumbnail from URL or meta tags
+ */
+export async function getLinkedInThumbnailUrl(url: string): Promise<string | null> {
+  if (!/linkedin\.com/i.test(url)) return null;
+  
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': BROWSER_USER_AGENT,
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+      redirect: 'follow',
+    });
+    clearTimeout(timeout);
+    
+    if (!res.ok) return null;
+    const html = await res.text();
+    
+    // Try multiple meta tag patterns for LinkedIn
+    const patterns = [
+      /<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i,
+      /<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i,
+      /<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i,
+      /<meta[^>]*property=["']og:image:secure_url["'][^>]*content=["']([^"']+)["']/i,
+    ];
+    
+    for (const pattern of patterns) {
+      const match = html.match(pattern);
+      if (match?.[1]) {
+        const href = match[1].trim();
+        if (href.startsWith('http')) return href;
+        if (href.startsWith('//')) return `https:${href}`;
+      }
+    }
+  } catch {
+    // Ignore errors
+  }
+  
+  return null;
+}
+
+/**
  * Fetch Open Graph metadata (og:image, og:title) from a URL.
  * Uses a browser-like User-Agent so Instagram/Facebook are more likely to return full HTML with og:image.
  */

@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { User } from '../user/user.entity';
 
-export type LinkSource = 'instagram' | 'facebook' | 'twitter' | 'tiktok' | 'other';
+export type LinkSource = 'instagram' | 'facebook' | 'twitter' | 'tiktok' | 'youtube' | 'linkedin' | 'other';
 
 @Entity('links')
 export class Link {

@@ -6,6 +6,8 @@ export const SOURCES: { key: '' | LinkSource; label: string }[] = [
   { key: 'facebook', label: 'Facebook' },
   { key: 'twitter', label: 'Twitter' },
   { key: 'tiktok', label: 'TikTok' },
+  { key: 'youtube', label: 'YouTube' },
+  { key: 'linkedin', label: 'LinkedIn' },
   { key: 'other', label: 'Other' },
 ];
 
@@ -18,8 +20,6 @@ export const CATEGORIES: { key: '' | LinkCategory; label: string }[] = [
   { key: 'music', label: 'Music' },
   { key: 'tech', label: 'Tech' },
   { key: 'entertainment', label: 'Entertainment' },
-  { key: 'youtube', label: 'YouTube' },
-  { key: 'linkedin', label: 'LinkedIn' },
   { key: 'other', label: 'Other' },
 ];
 
@@ -28,6 +28,8 @@ export const SOURCE_COLORS: Record<LinkSource, string> = {
   facebook: '#1877F2',
   twitter: '#1DA1F2',
   tiktok: '#000000',
+  youtube: '#FF0000',
+  linkedin: '#0A66C2',
   other: '#6B7280',
 };
 

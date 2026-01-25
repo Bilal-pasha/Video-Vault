@@ -1,7 +1,7 @@
 import { IsString, IsUrl, IsOptional, IsIn, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-const SOURCES = ['instagram', 'facebook', 'twitter', 'tiktok', 'other'] as const;
+const SOURCES = ['instagram', 'facebook', 'twitter', 'tiktok', 'youtube', 'linkedin', 'other'] as const;
 const CATEGORIES = [
   'nature',
   'cooking',
@@ -10,8 +10,6 @@ const CATEGORIES = [
   'music',
   'tech',
   'entertainment',
-  'youtube',
-  'linkedin',
   'other',
 ] as const;
 

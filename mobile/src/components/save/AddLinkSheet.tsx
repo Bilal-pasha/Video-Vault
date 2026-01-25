@@ -30,8 +30,6 @@ const CATEGORY_OPTIONS: { key: LinkCategory; label: string }[] = [
   { key: 'music', label: 'Music' },
   { key: 'tech', label: 'Tech' },
   { key: 'entertainment', label: 'Entertainment' },
-  { key: 'youtube', label: 'YouTube' },
-  { key: 'linkedin', label: 'LinkedIn' },
   { key: 'other', label: 'Other' },
 ];
 
@@ -40,6 +38,8 @@ const SOURCE_OPTIONS: { key: LinkSource; label: string; color: string }[] = [
   { key: 'facebook', label: 'Facebook', color: '#1877F2' },
   { key: 'twitter', label: 'Twitter', color: '#1DA1F2' },
   { key: 'tiktok', label: 'TikTok', color: '#000000' },
+  { key: 'youtube', label: 'YouTube', color: '#FF0000' },
+  { key: 'linkedin', label: 'LinkedIn', color: '#0A66C2' },
   { key: 'other', label: 'Other', color: '#6B7280' },
 ];
 

@@ -1,4 +1,4 @@
-export type LinkSource = 'instagram' | 'facebook' | 'twitter' | 'tiktok' | 'other';
+export type LinkSource = 'instagram' | 'facebook' | 'twitter' | 'tiktok' | 'youtube' | 'linkedin' | 'other';
 
 export type LinkCategory =
   | 'nature'
@@ -8,8 +8,6 @@ export type LinkCategory =
   | 'music'
   | 'tech'
   | 'entertainment'
-  | 'youtube'
-  | 'linkedin'
   | 'other';
 
 export interface SavedLink {

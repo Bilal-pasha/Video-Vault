@@ -8,6 +8,7 @@ import {
   getYoutubeThumbnailUrl,
   getInstagramThumbnailUrl,
   getFacebookThumbnailUrl,
+  getLinkedInThumbnailUrl,
 } from './utils/og-metadata.util';
 
 @Injectable()
@@ -39,6 +40,10 @@ export class LinksService {
     if (!thumbnailUrl && /facebook\.com|fb\.watch|fb\.com/i.test(dto.url)) {
       const fbThumb = await getFacebookThumbnailUrl(dto.url);
       if (fbThumb) thumbnailUrl = fbThumb;
+    }
+    if (!thumbnailUrl && /linkedin\.com/i.test(dto.url)) {
+      const liThumb = await getLinkedInThumbnailUrl(dto.url);
+      if (liThumb) thumbnailUrl = liThumb;
     }
 
     const link = this.linkRepository.create({
@@ -92,6 +97,9 @@ export class LinksService {
         } else if (/facebook\.com|fb\.watch|fb\.com/i.test(link.url)) {
           const fb = await getFacebookThumbnailUrl(link.url);
           if (fb) link.thumbnailUrl = fb;
+        } else if (/linkedin\.com/i.test(link.url)) {
+          const li = await getLinkedInThumbnailUrl(link.url);
+          if (li) link.thumbnailUrl = li;
         }
       }
     }
@@ -100,10 +108,12 @@ export class LinksService {
 
   private inferSource(url: string): LinkSource {
     const u = url.toLowerCase();
-    if (u.includes('instagram.com')) return 'instagram';
-    if (u.includes('facebook.com') || u.includes('fb.com') || u.includes('fb.me')) return 'facebook';
+    if (u.includes('instagram.com') || u.includes('instagr.am')) return 'instagram';
+    if (u.includes('facebook.com') || u.includes('fb.com') || u.includes('fb.me') || u.includes('fb.watch')) return 'facebook';
     if (u.includes('twitter.com') || u.includes('x.com')) return 'twitter';
     if (u.includes('tiktok.com')) return 'tiktok';
+    if (u.includes('youtube.com') || u.includes('youtu.be')) return 'youtube';
+    if (u.includes('linkedin.com')) return 'linkedin';
     return 'other';
   }
 }
