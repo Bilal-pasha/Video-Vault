@@ -7,6 +7,7 @@ import {
   fetchOgMetadata,
   getYoutubeThumbnailUrl,
   getInstagramThumbnailUrl,
+  getFacebookThumbnailUrl,
 } from './utils/og-metadata.util';
 
 @Injectable()
@@ -34,6 +35,10 @@ export class LinksService {
     if (!thumbnailUrl && /instagram\.com|instagr\.am/i.test(dto.url)) {
       const igThumb = await getInstagramThumbnailUrl(dto.url);
       if (igThumb) thumbnailUrl = igThumb;
+    }
+    if (!thumbnailUrl && /facebook\.com|fb\.watch|fb\.com/i.test(dto.url)) {
+      const fbThumb = await getFacebookThumbnailUrl(dto.url);
+      if (fbThumb) thumbnailUrl = fbThumb;
     }
 
     const link = this.linkRepository.create({
@@ -84,6 +89,9 @@ export class LinksService {
         } else if (/instagram\.com|instagr\.am/i.test(link.url)) {
           const ig = await getInstagramThumbnailUrl(link.url);
           if (ig) link.thumbnailUrl = ig;
+        } else if (/facebook\.com|fb\.watch|fb\.com/i.test(link.url)) {
+          const fb = await getFacebookThumbnailUrl(link.url);
+          if (fb) link.thumbnailUrl = fb;
         }
       }
     }

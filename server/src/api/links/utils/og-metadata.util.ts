@@ -18,9 +18,12 @@ const BROWSER_USER_AGENT =
 
 /**
  * Try Instagram oEmbed for thumbnail (may still return thumbnail_url on some endpoints).
+ * Falls back to extracting from HTML if oEmbed fails.
  */
 export async function getInstagramThumbnailUrl(url: string): Promise<string | null> {
   if (!/instagram\.com|instagr\.am/i.test(url)) return null;
+  
+  // Try oEmbed first (works for some public posts)
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
@@ -29,14 +32,102 @@ export async function getInstagramThumbnailUrl(url: string): Promise<string | nu
       { signal: controller.signal }
     );
     clearTimeout(timeout);
-    if (!res.ok) return null;
-    const data = (await res.json()) as { thumbnail_url?: string };
-    const href = data?.thumbnail_url;
-    if (typeof href === 'string' && href.startsWith('http')) return href;
-    return null;
+    if (res.ok) {
+      const data = (await res.json()) as { thumbnail_url?: string };
+      const href = data?.thumbnail_url;
+      if (typeof href === 'string' && href.startsWith('http')) return href;
+    }
   } catch {
-    return null;
+    // Continue to fallback method
   }
+
+  // Fallback: Try to extract from HTML meta tags
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': BROWSER_USER_AGENT,
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+      redirect: 'follow',
+    });
+    clearTimeout(timeout);
+    
+    if (!res.ok) return null;
+    const html = await res.text();
+    
+    // Try multiple meta tag patterns
+    const patterns = [
+      /<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i,
+      /<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i,
+      /<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i,
+      /<meta[^>]*property=["']og:image:secure_url["'][^>]*content=["']([^"']+)["']/i,
+    ];
+    
+    for (const pattern of patterns) {
+      const match = html.match(pattern);
+      if (match?.[1]) {
+        const href = match[1].trim();
+        if (href.startsWith('http')) return href;
+        if (href.startsWith('//')) return `https:${href}`;
+      }
+    }
+  } catch {
+    // Ignore errors
+  }
+  
+  return null;
+}
+
+/**
+ * Extract Facebook video thumbnail from URL or meta tags
+ */
+export async function getFacebookThumbnailUrl(url: string): Promise<string | null> {
+  if (!/facebook\.com|fb\.watch|fb\.com/i.test(url)) return null;
+  
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': BROWSER_USER_AGENT,
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate, br',
+      },
+      redirect: 'follow',
+    });
+    clearTimeout(timeout);
+    
+    if (!res.ok) return null;
+    const html = await res.text();
+    
+    // Try multiple meta tag patterns for Facebook
+    const patterns = [
+      /<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i,
+      /<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i,
+      /<meta[^>]*property=["']og:image:secure_url["'][^>]*content=["']([^"']+)["']/i,
+      /<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i,
+      /<meta[^>]*property=["']og:video:thumbnail["'][^>]*content=["']([^"']+)["']/i,
+    ];
+    
+    for (const pattern of patterns) {
+      const match = html.match(pattern);
+      if (match?.[1]) {
+        const href = match[1].trim();
+        if (href.startsWith('http')) return href;
+        if (href.startsWith('//')) return `https:${href}`;
+      }
+    }
+  } catch {
+    // Ignore errors
+  }
+  
+  return null;
 }
 
 /**
