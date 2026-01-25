@@ -12,7 +12,7 @@ import {
   ScrollView,
   Text,
 } from "react-native";
-import { ArrowLeft, Mail, Lock, User } from "lucide-react-native";
+import { ArrowLeft, Mail, Lock, User, Eye, EyeOff } from "lucide-react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -41,6 +41,7 @@ export default function RegisterScreen() {
   const router = useRouter();
   const { signUp, error: authError, clearError } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Animation values
   const backButtonOpacity = useSharedValue(0);
@@ -383,13 +384,24 @@ export default function RegisterScreen() {
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
-                      secureTextEntry
+                      secureTextEntry={!showPassword}
                       autoCapitalize="none"
                       autoComplete="password-new"
                       autoCorrect={false}
                     />
                   )}
                 />
+                <Pressable
+                  onPress={() => setShowPassword((prev) => !prev)}
+                  hitSlop={12}
+                  style={styles.eyeButton}
+                >
+                  {showPassword ? (
+                    <EyeOff size={20} color={iconColor} />
+                  ) : (
+                    <Eye size={20} color={iconColor} />
+                  )}
+                </Pressable>
               </ThemedView>
               {errors.password && (
                 <ThemedText style={styles.errorText}>
@@ -564,6 +576,12 @@ const styles = StyleSheet.create({
   },
   inputIcon: {
     marginRight: 12,
+  },
+  eyeButton: {
+    padding: 4,
+    marginLeft: 8,
+    justifyContent: "center",
+    alignItems: "center",
   },
   input: {
     flex: 1,

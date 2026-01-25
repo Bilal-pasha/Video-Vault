@@ -12,7 +12,7 @@ import {
   ScrollView,
   Text,
 } from 'react-native';
-import { ArrowLeft, Mail, Lock } from 'lucide-react-native';
+import { ArrowLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -41,6 +41,7 @@ export default function LoginScreen() {
   const router = useRouter();
   const { signIn, error: authError, clearError } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Animation values
   const backButtonOpacity = useSharedValue(0);
@@ -125,6 +126,7 @@ export default function LoginScreen() {
   const inputBackgroundColor = useThemeColor({ light: '#FFFFFF', dark: '#1C1C1E' }, 'background');
   const iconColor = useThemeColor({ light: '#9BA1A6', dark: '#687076' }, 'icon');
   const placeholderColor = useThemeColor({ light: '#9BA1A6', dark: '#687076' }, 'icon');
+  const linkColor = useThemeColor({}, 'tint');
 
   const {
     control,
@@ -300,13 +302,23 @@ export default function LoginScreen() {
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
-                      secureTextEntry
+                      secureTextEntry={!showPassword}
                       autoCapitalize="none"
                       autoComplete="password"
                       autoCorrect={false}
                     />
                   )}
                 />
+                <Pressable
+                  onPress={() => setShowPassword((prev) => !prev)}
+                  hitSlop={12}
+                  style={styles.eyeButton}>
+                  {showPassword ? (
+                    <EyeOff size={20} color={iconColor} />
+                  ) : (
+                    <Eye size={20} color={iconColor} />
+                  )}
+                </Pressable>
               </ThemedView>
               {errors.password && (
                 <ThemedText style={styles.errorText}>{errors.password.message}</ThemedText>
@@ -396,6 +408,16 @@ export default function LoginScreen() {
                 </ThemedView>
               </AnimatedPressable>
             </ThemedView>
+
+            {/* Sign Up Link */}
+            <ThemedView style={styles.signUpContainer}>
+              <ThemedText style={styles.signUpPrompt}>Don't have an account? </ThemedText>
+              <Link href={PublicRoutes.REGISTER}>
+                <ThemedText style={[styles.signUpLinkText, { color: linkColor }]}>
+                  Sign Up
+                </ThemedText>
+              </Link>
+            </ThemedView>
           </ThemedView>
         </ThemedView>
       </ScrollView>
@@ -459,6 +481,12 @@ const styles = StyleSheet.create({
   },
   inputIcon: {
     marginRight: 12,
+  },
+  eyeButton: {
+    padding: 4,
+    marginLeft: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   input: {
     flex: 1,
@@ -547,6 +575,20 @@ const styles = StyleSheet.create({
   },
   googleButtonText: {
     fontSize: 16,
+    fontWeight: '600',
+  },
+  signUpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 24,
+    flexWrap: 'wrap',
+  },
+  signUpPrompt: {
+    fontSize: 15,
+  },
+  signUpLinkText: {
+    fontSize: 15,
     fontWeight: '600',
   },
 });

@@ -3,7 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Link, LinkSource } from './link.entity';
 import { CreateLinkDto } from './dto/create-link.dto';
-import { fetchOgMetadata } from './utils/og-metadata.util';
+import {
+  fetchOgMetadata,
+  getYoutubeThumbnailUrl,
+} from './utils/og-metadata.util';
 
 @Injectable()
 export class LinksService {
@@ -21,6 +24,11 @@ export class LinksService {
       const og = await fetchOgMetadata(dto.url);
       if (!thumbnailUrl && og.thumbnailUrl) thumbnailUrl = og.thumbnailUrl;
       if (!title && og.title) title = og.title;
+    }
+    // YouTube/Shorts often don't expose og:image to server fetch; use known thumbnail URL
+    if (!thumbnailUrl) {
+      const ytThumb = getYoutubeThumbnailUrl(dto.url);
+      if (ytThumb) thumbnailUrl = ytThumb;
     }
 
     const link = this.linkRepository.create({
@@ -61,7 +69,15 @@ export class LinksService {
       );
     }
 
-    return qb.getMany();
+    const links = await qb.getMany();
+    // Backfill thumbnail for existing YouTube/Shorts links saved when OG returned null
+    for (const link of links) {
+      if (!link.thumbnailUrl) {
+        const yt = getYoutubeThumbnailUrl(link.url);
+        if (yt) link.thumbnailUrl = yt;
+      }
+    }
+    return links;
   }
 
   private inferSource(url: string): LinkSource {

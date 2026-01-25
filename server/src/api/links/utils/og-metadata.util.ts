@@ -1,4 +1,18 @@
 /**
+ * YouTube (and Shorts) often don't expose og:image to server-side fetch.
+ * Derive thumbnail from video ID when URL is youtube.com/watch, youtube.com/shorts, or youtu.be.
+ */
+const YOUTUBE_VIDEO_ID_REGEX =
+  /(?:youtube\.com\/watch\?v=|youtube\.com\/shorts\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/i;
+
+export function getYoutubeThumbnailUrl(url: string): string | null {
+  const match = url.match(YOUTUBE_VIDEO_ID_REGEX);
+  if (!match?.[1]) return null;
+  const videoId = match[1];
+  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+}
+
+/**
  * Fetch Open Graph metadata (og:image, og:title) from a URL.
  * Used as fallback when thumbnailUrl/title are not provided on link create.
  */
