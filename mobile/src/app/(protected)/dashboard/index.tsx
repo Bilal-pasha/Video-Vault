@@ -17,12 +17,17 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useLinks } from '@/services/links/links.services';
 import type { LinkSource, LinkCategory } from '@/services/links/links.types';
 
-import { getColumns, HORZ_PADDING, CARD_GAP } from './constants';
-import { DashboardHeader } from './components/DashboardHeader';
-import { DashboardSearch } from './components/DashboardSearch';
-import { DashboardFilters } from './components/DashboardFilters';
-import { VideoBox } from './components/VideoBox';
-import { EmptyState } from './components/EmptyState';
+import {
+  getColumns,
+  HORZ_PADDING,
+  CARD_GAP,
+} from '@/components/dashboard/constants';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+import { DashboardSearch } from '@/components/dashboard/DashboardSearch';
+import { DashboardFilters } from '@/components/dashboard/DashboardFilters';
+import { VideoBox } from '@/components/dashboard/VideoBox';
+import { EmptyState } from '@/components/dashboard/EmptyState';
+import React from 'react';
 
 export default function DashboardScreen() {
   const { width } = useWindowDimensions();
@@ -76,7 +81,7 @@ export default function DashboardScreen() {
           userEmail={user?.email}
           iconColor={iconColor}
           inputBg={inputBg}
-          onNotificationPress={() => {}}
+          onNotificationPress={() => { }}
           onSignOut={signOut}
         />
 

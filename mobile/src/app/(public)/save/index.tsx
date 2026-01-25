@@ -14,7 +14,8 @@ import {
 } from '@/constants/routes';
 import type { LinkCategory, LinkSource } from '@/services/links/links.types';
 
-import { AddLinkSheet } from './components/AddLinkSheet';
+import { AddLinkSheet } from '../../../components/save/AddLinkSheet';
+import React from 'react';
 
 export default function SaveLinkScreen() {
   const params = useLocalSearchParams<{ url?: string }>();
@@ -31,6 +32,10 @@ export default function SaveLinkScreen() {
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const iconColor = useThemeColor({ light: '#9BA1A6', dark: '#687076' }, 'icon');
+  const tintColor = useThemeColor(
+    { light: '#2563EB', dark: '#60A5FA' },
+    'tint',
+  );
   const inputBg = useThemeColor(
     { light: '#F5F5F5', dark: '#1C1C1E' },
     'background',
@@ -67,7 +72,7 @@ export default function SaveLinkScreen() {
     }
 
     handled.current = true;
-    setPendingUrl(linkUrl);
+    setPendingUrl(linkUrl ?? null);
     setShowCategoryModal(true);
   }, [params.url, isAuthenticated, authLoading, router]);
 
@@ -107,7 +112,7 @@ export default function SaveLinkScreen() {
   if (authLoading) {
     return (
       <ThemedView style={[styles.container, { backgroundColor }]}>
-        <ActivityIndicator size="large" color="#2563EB" />
+        <ActivityIndicator size="large" color={tintColor} />
         <ThemedText style={[styles.statusText, { color: iconColor }]}>
           Checking sign-in…
         </ThemedText>
@@ -137,7 +142,7 @@ export default function SaveLinkScreen() {
 
       {!showCategoryModal && status !== 'idle' && (
         <>
-          <ActivityIndicator size="large" color="#2563EB" />
+          <ActivityIndicator size="large" color={tintColor} />
           <ThemedText style={[styles.statusText, { color: iconColor }]}>
             {status === 'saving'
               ? 'Saving link…'

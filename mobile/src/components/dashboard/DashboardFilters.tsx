@@ -3,7 +3,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/themed-text';
 import { FilterPill } from './FilterPill';
-import { HORZ_PADDING, SOURCES, CATEGORIES } from '../constants';
+import { HORZ_PADDING, SOURCES, CATEGORIES } from './constants';
 import type { LinkSource, LinkCategory } from '@/services/links/links.types';
 
 export function DashboardFilters({

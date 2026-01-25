@@ -3,7 +3,7 @@ import { Film } from 'lucide-react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/themed-text';
-import { HORZ_PADDING } from '../constants';
+import { HORZ_PADDING } from './constants';
 
 export function EmptyState({
   hasFilters,

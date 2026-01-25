@@ -15,7 +15,7 @@ import {
   SOURCE_COLORS,
   formatCategory,
   truncate,
-} from '../constants';
+} from './constants';
 
 export function VideoBox({
   item,

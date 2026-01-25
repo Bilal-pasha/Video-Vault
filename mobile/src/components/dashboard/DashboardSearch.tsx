@@ -3,7 +3,7 @@ import { Search } from 'lucide-react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { ThemedView } from '@/components/themed-view';
-import { HORZ_PADDING } from '../constants';
+import { HORZ_PADDING } from './constants';
 
 export function DashboardSearch({
   value,

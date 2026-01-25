@@ -4,8 +4,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-
-const HORZ_PADDING = 20;
+import { HORZ_PADDING } from './constants';
 
 export function DashboardHeader({
   userEmail,
