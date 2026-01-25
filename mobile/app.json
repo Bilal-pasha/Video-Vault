@@ -26,6 +26,14 @@
             "*/*"
           ]
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
       ]
     ],
     "orientation": "portrait",
@@ -55,7 +63,6 @@
         "backgroundImage": "./src/assets/images/android-icon-background.png",
         "monochromeImage": "./src/assets/images/android-icon-monochrome.png"
       },
-      "usesCleartextTraffic": true,
       "package": "com.bilal_pasha.videomobileapplication",
       "permissions": [
         "INTERNET",
