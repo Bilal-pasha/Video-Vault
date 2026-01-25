@@ -6,6 +6,7 @@ import { CreateLinkDto } from './dto/create-link.dto';
 import {
   fetchOgMetadata,
   getYoutubeThumbnailUrl,
+  getInstagramThumbnailUrl,
 } from './utils/og-metadata.util';
 
 @Injectable()
@@ -25,10 +26,14 @@ export class LinksService {
       if (!thumbnailUrl && og.thumbnailUrl) thumbnailUrl = og.thumbnailUrl;
       if (!title && og.title) title = og.title;
     }
-    // YouTube/Shorts often don't expose og:image to server fetch; use known thumbnail URL
+    // Platform-specific thumbnail fallbacks when OG returns nothing
     if (!thumbnailUrl) {
       const ytThumb = getYoutubeThumbnailUrl(dto.url);
       if (ytThumb) thumbnailUrl = ytThumb;
+    }
+    if (!thumbnailUrl && /instagram\.com|instagr\.am/i.test(dto.url)) {
+      const igThumb = await getInstagramThumbnailUrl(dto.url);
+      if (igThumb) thumbnailUrl = igThumb;
     }
 
     const link = this.linkRepository.create({
@@ -70,11 +75,16 @@ export class LinksService {
     }
 
     const links = await qb.getMany();
-    // Backfill thumbnail for existing YouTube/Shorts links saved when OG returned null
+    // Backfill thumbnail for existing links where OG/platform fetch previously failed
     for (const link of links) {
       if (!link.thumbnailUrl) {
         const yt = getYoutubeThumbnailUrl(link.url);
-        if (yt) link.thumbnailUrl = yt;
+        if (yt) {
+          link.thumbnailUrl = yt;
+        } else if (/instagram\.com|instagr\.am/i.test(link.url)) {
+          const ig = await getInstagramThumbnailUrl(link.url);
+          if (ig) link.thumbnailUrl = ig;
+        }
       }
     }
     return links;

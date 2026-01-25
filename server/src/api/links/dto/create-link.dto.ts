@@ -10,6 +10,8 @@ const CATEGORIES = [
   'music',
   'tech',
   'entertainment',
+  'youtube',
+  'linkedin',
   'other',
 ] as const;
 

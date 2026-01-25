@@ -12,9 +12,36 @@ export function getYoutubeThumbnailUrl(url: string): string | null {
   return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 }
 
+/** Browser-like User-Agent to improve OG/thumbnail fetch for Instagram, Facebook, etc. */
+const BROWSER_USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+/**
+ * Try Instagram oEmbed for thumbnail (may still return thumbnail_url on some endpoints).
+ */
+export async function getInstagramThumbnailUrl(url: string): Promise<string | null> {
+  if (!/instagram\.com|instagr\.am/i.test(url)) return null;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(
+      `https://api.instagram.com/oembed?url=${encodeURIComponent(url)}`,
+      { signal: controller.signal }
+    );
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    const data = (await res.json()) as { thumbnail_url?: string };
+    const href = data?.thumbnail_url;
+    if (typeof href === 'string' && href.startsWith('http')) return href;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Fetch Open Graph metadata (og:image, og:title) from a URL.
- * Used as fallback when thumbnailUrl/title are not provided on link create.
+ * Uses a browser-like User-Agent so Instagram/Facebook are more likely to return full HTML with og:image.
  */
 export async function fetchOgMetadata(url: string): Promise<{
   thumbnailUrl: string | null;
@@ -24,13 +51,15 @@ export async function fetchOgMetadata(url: string): Promise<{
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 6000);
+    const timeout = setTimeout(() => controller.abort(), 8000);
 
     const res = await fetch(url, {
       signal: controller.signal,
       headers: {
-        'User-Agent':
-          'Mozilla/5.0 (compatible; LinkSaver/1.0; +https://github.com)',
+        'User-Agent': BROWSER_USER_AGENT,
+        Accept:
+          'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
       },
       redirect: 'follow',
     });

@@ -8,6 +8,8 @@ export type LinkCategory =
   | 'music'
   | 'tech'
   | 'entertainment'
+  | 'youtube'
+  | 'linkedin'
   | 'other';
 
 export interface SavedLink {
