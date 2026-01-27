@@ -36,7 +36,10 @@
         }
       ],
       [
-        "@react-native-google-signin/google-signin"
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.816917709083-jb0c8j5rhuloskeobklqvt9r6f6squ0e"
+        }
       ]
     ],
     "orientation": "portrait",

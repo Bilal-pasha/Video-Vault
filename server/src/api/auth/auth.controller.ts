@@ -278,6 +278,11 @@ export class AuthController {
         throw new UnauthorizedException('Invalid Google token');
       }
 
+      // Validate required fields
+      if (!payload.sub || !payload.email) {
+        throw new UnauthorizedException('Google token missing required information');
+      }
+
       // Extract user information
       const googleUser = {
         googleId: payload.sub,

@@ -12,6 +12,14 @@ import { ApiResponse, AuthResponse } from './auth.types';
 const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '';
 const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || '';
 
+// Validate configuration
+if (!GOOGLE_WEB_CLIENT_ID) {
+  console.error('EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID is not configured');
+}
+if (Platform.OS === 'ios' && !GOOGLE_IOS_CLIENT_ID) {
+  console.warn('EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID is not configured for iOS');
+}
+
 /**
  * Initialize Google Sign-In
  * Call this once when the app starts
@@ -39,8 +47,15 @@ class GoogleAuthService {
    */
   async signInWithGoogle(): Promise<ApiResponse<AuthResponse['data']>> {
     try {
+      // Validate configuration before attempting sign-in
+      if (!GOOGLE_WEB_CLIENT_ID) {
+        throw new Error('Google Sign-In is not properly configured. Please check your environment variables.');
+      }
+
       // Check if Google Play Services are available (Android)
-      await GoogleSignin.hasPlayServices();
+      if (Platform.OS === 'android') {
+        await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      }
 
       // Sign in with Google
       const userInfo = await GoogleSignin.signIn();
@@ -72,6 +87,15 @@ class GoogleAuthService {
         throw new Error('Google Play Services not available');
       } else {
         console.error('Google Sign-In error:', error);
+        // Provide more helpful error message for DEVELOPER_ERROR
+        if (error.message?.includes('DEVELOPER_ERROR')) {
+          throw new Error(
+            'Google Sign-In configuration error. Please ensure:\n' +
+            '1. Your OAuth client IDs are correctly set in .env\n' +
+            '2. SHA-1/SHA-256 certificates are added to Google Cloud Console (Android)\n' +
+            '3. The bundle identifier matches your Google Cloud Console configuration'
+          );
+        }
         throw new Error(error.message || 'Failed to sign in with Google');
       }
     }
