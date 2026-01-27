@@ -4,6 +4,8 @@ export const API_ENDPOINTS = {
   AUTH_LOGOUT: '/v1/api/auth/logout',
   AUTH_TOKEN_REFRESH: '/v1/api/auth/token/refresh',
   AUTH_ME: '/v1/api/auth/me',
+  AUTH_PROFILE: '/v1/api/auth/profile',
+  AUTH_PASSWORD: '/v1/api/auth/password',
   AUTH_FORGOT_PASSWORD: '/v1/api/auth/forgot-password',
   AUTH_RESET_PASSWORD: '/v1/api/auth/reset-password',
   AUTH_VERIFY_OTP: '/v1/api/auth/verify-otp',

@@ -12,20 +12,25 @@ export function DashboardHeader({
   inputBg,
   onNotificationPress,
   onSignOut,
+  onAvatarPress,
 }: {
   userEmail: string | undefined;
   iconColor: string;
   inputBg: string;
   onNotificationPress: () => void;
   onSignOut: () => void;
+  onAvatarPress: () => void;
 }) {
   return (
     <Animated.View entering={FadeIn.duration(400)}>
       <ThemedView style={styles.header}>
         <ThemedView style={styles.headerLeft}>
-          <View style={[styles.avatar, { backgroundColor: inputBg }]}>
+          <Pressable
+            onPress={onAvatarPress}
+            hitSlop={8}
+            style={[styles.avatar, { backgroundColor: inputBg }]}>
             <User size={20} color={iconColor} />
-          </View>
+          </Pressable>
           <ThemedView style={styles.headerUser}>
             <ThemedText style={styles.headerLabel}>Saved links</ThemedText>
             <ThemedText

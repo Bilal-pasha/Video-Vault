@@ -12,9 +12,10 @@ import Animated, {
   withDelay,
 } from 'react-native-reanimated';
 import { useEffect } from 'react';
-import { PublicRoutes } from '@/constants/routes';
+import { PublicRoutes, PrivateRoutes } from '@/constants/routes';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useAuth } from '@/providers/AuthProvider';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -27,6 +28,7 @@ export default function WelcomeScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme() ?? 'light';
   const isDark = colorScheme === 'dark';
+  const { isAuthenticated, isLoading } = useAuth();
 
   const textColor = useThemeColor({}, 'text');
   const iconColor = useThemeColor({}, 'icon');
@@ -49,6 +51,13 @@ export default function WelcomeScreen() {
   const button1Opacity = useSharedValue(0);
   const button2TranslateY = useSharedValue(50);
   const button2Opacity = useSharedValue(0);
+
+  // Check if user is already authenticated and redirect to dashboard
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.replace(PrivateRoutes.DASHBOARD);
+    }
+  }, [isAuthenticated, isLoading, router]);
 
   useEffect(() => {
     // Icon animation - scale and fade in
@@ -144,6 +153,29 @@ export default function WelcomeScreen() {
   const secondaryGradient = isDark
     ? DARK_SECONDARY_GRADIENT
     : LIGHT_SECONDARY_GRADIENT;
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <LinearGradient
+        colors={[...bgGradient]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.container}>
+        <View style={styles.content}>
+          <View style={[styles.iconContainer, isDark && styles.iconContainerDark]}>
+            <LinearGradient
+              colors={['#60A5FA', '#3B82F6']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.iconGradient}>
+              <Video size={60} color="#FFFFFF" strokeWidth={2.5} />
+            </LinearGradient>
+          </View>
+        </View>
+      </LinearGradient>
+    );
+  }
 
   return (
     <LinearGradient

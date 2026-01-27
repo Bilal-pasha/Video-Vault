@@ -26,7 +26,7 @@ import { useEffect, useState } from "react";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { PublicRoutes } from "@/constants/routes";
+import { PublicRoutes, PrivateRoutes } from "@/constants/routes";
 import { registerSchema, type RegisterFormData } from "@/schemas";
 import { images } from "@/constants/images";
 import { useAuth } from "@/providers/AuthProvider";
@@ -39,9 +39,16 @@ const GoogleIcon = images.googleLogo;
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { signUp, error: authError, clearError } = useAuth();
+  const { signUp, error: authError, clearError, isAuthenticated, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.replace(PrivateRoutes.DASHBOARD);
+    }
+  }, [isAuthenticated, isLoading, router]);
 
   // Animation values
   const backButtonOpacity = useSharedValue(0);
@@ -455,29 +462,6 @@ export default function RegisterScreen() {
 
             {/* Social Login Buttons */}
             <ThemedView style={styles.socialButtons}>
-              {/* Apple Button */}
-              <AnimatedPressable
-                style={[
-                  styles.googleButton,
-                  {
-                    borderColor,
-                    backgroundColor: inputBackgroundColor,
-                  },
-                  googleButtonAnimatedStyle,
-                  buttonPressStyle,
-                ]}
-                onPress={() => handleButtonPress(handleAppleLogin)}
-              >
-                <ThemedView style={styles.socialButtonContent}>
-                  <ThemedView style={styles.iconWrapper}>
-                    <AppleIcon width={20} height={24} fill="#FFFFFF" />
-                  </ThemedView>
-                  <Text style={[styles.googleButtonText, { color: textColor }]}>
-                    Continue with Apple
-                  </Text>
-                </ThemedView>
-              </AnimatedPressable>
-
               {/* Google Button */}
               <AnimatedPressable
                 style={[

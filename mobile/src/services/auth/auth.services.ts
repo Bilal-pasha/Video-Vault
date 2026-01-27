@@ -191,6 +191,38 @@ class AuthService {
             return false;
         }
     }
+
+    /**
+     * Update user profile (name)
+     */
+    async updateProfile(data: { name: string }): Promise<ApiResponse<AuthResponse['data']>> {
+        try {
+            const response = await httpPrivate.put<ApiResponse<AuthResponse['data']>>(
+                API_ENDPOINTS.AUTH_PROFILE,
+                data
+            );
+            return response.data;
+        } catch (error) {
+            const errorMessage = extractErrorMessage(error);
+            throw new Error(errorMessage);
+        }
+    }
+
+    /**
+     * Update user password
+     */
+    async updatePassword(data: { currentPassword: string; newPassword: string }): Promise<ApiResponse<{ message: string }>> {
+        try {
+            const response = await httpPrivate.put<ApiResponse<{ message: string }>>(
+                API_ENDPOINTS.AUTH_PASSWORD,
+                data
+            );
+            return response.data;
+        } catch (error) {
+            const errorMessage = extractErrorMessage(error);
+            throw new Error(errorMessage);
+        }
+    }
 }
 
 // Export singleton instance

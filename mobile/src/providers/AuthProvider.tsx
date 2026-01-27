@@ -89,7 +89,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       return user;
-    } catch {
+    } catch (error) {
+      console.log('Auth check failed:', error);
       setState({
         user: null,
         isAuthenticated: false,

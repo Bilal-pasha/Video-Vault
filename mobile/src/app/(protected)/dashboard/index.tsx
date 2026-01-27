@@ -8,6 +8,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { ThemedView } from '@/components/themed-view';
@@ -16,6 +17,7 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 import { useAuth } from '@/providers/AuthProvider';
 import { useLinks } from '@/services/links/links.services';
 import type { LinkSource, LinkCategory } from '@/services/links/links.types';
+import { PrivateRoutes } from '@/constants/routes';
 
 import {
   getColumns,
@@ -32,6 +34,7 @@ import React from 'react';
 export default function DashboardScreen() {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { user, signOut } = useAuth();
   const [search, setSearch] = useState('');
   const [source, setSource] = useState<'' | LinkSource>('');
@@ -67,6 +70,10 @@ export default function DashboardScreen() {
     Linking.openURL(url);
   }, []);
 
+  const handleAvatarPress = useCallback(() => {
+    router.push(PrivateRoutes.PROFILE);
+  }, [router]);
+
   const hasFilters = Boolean(search.trim() || source || category);
 
   return (
@@ -83,6 +90,7 @@ export default function DashboardScreen() {
           inputBg={inputBg}
           onNotificationPress={() => { }}
           onSignOut={signOut}
+          onAvatarPress={handleAvatarPress}
         />
 
         <DashboardSearch

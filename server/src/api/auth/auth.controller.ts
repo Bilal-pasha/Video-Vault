@@ -3,6 +3,7 @@ import {
   Post,
   Body,
   Get,
+  Put,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -24,6 +25,8 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from '../user/user.entity';
@@ -186,6 +189,58 @@ export class AuthController {
           updatedAt: user.updatedAt.toISOString(),
         },
       },
+    };
+  }
+
+  @Put('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiCookieAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update user profile' })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile updated successfully',
+    type: AuthResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async updateProfile(
+    @CurrentUser() user: User,
+    @Body() updateProfileDto: UpdateProfileDto,
+  ): Promise<AuthResponseDto> {
+    const updatedUser = await this.authService.updateProfile(
+      user.id,
+      updateProfileDto,
+    );
+
+    return {
+      success: true,
+      message: 'Profile updated successfully',
+      data: { user: updatedUser },
+    };
+  }
+
+  @Put('password')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiCookieAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update user password' })
+  @ApiResponse({
+    status: 200,
+    description: 'Password updated successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Current password is incorrect' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async updatePassword(
+    @CurrentUser() user: User,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ): Promise<{ success: boolean; message: string }> {
+    await this.authService.updatePassword(user.id, updatePasswordDto);
+
+    return {
+      success: true,
+      message: 'Password updated successfully',
     };
   }
 }
