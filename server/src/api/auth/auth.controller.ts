@@ -27,19 +27,28 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { GoogleAuthDto } from './dto/google-auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from '../user/user.entity';
 import { COOKIE_NAMES } from '../../common/constants/app.constants';
 import { setAuthCookies, clearAuthCookies } from '../../utils/cookie.utils';
+import { OAuth2Client } from 'google-auth-library';
 
 @ApiTags('auth')
 @Controller('api/auth')
 export class AuthController {
+  private googleClient: OAuth2Client;
+
   constructor(
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
-  ) {}
+  ) {
+    const googleClientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    if (googleClientId) {
+      this.googleClient = new OAuth2Client(googleClientId);
+    }
+  }
 
   private getCookieConfig() {
     const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
@@ -242,5 +251,55 @@ export class AuthController {
       success: true,
       message: 'Password updated successfully',
     };
+  }
+
+  @Post('google')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Authenticate with Google' })
+  @ApiResponse({
+    status: 200,
+    description: 'Google authentication successful',
+    type: AuthResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Invalid Google token' })
+  async googleAuth(
+    @Body() googleAuthDto: GoogleAuthDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthResponseDto> {
+    try {
+      // Verify Google ID token
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken: googleAuthDto.idToken,
+        audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
+      });
+
+      const payload = ticket.getPayload();
+      if (!payload) {
+        throw new UnauthorizedException('Invalid Google token');
+      }
+
+      // Extract user information
+      const googleUser = {
+        googleId: payload.sub,
+        email: payload.email,
+        name: payload.name || payload.email.split('@')[0],
+        picture: payload.picture,
+      };
+
+      // Authenticate or create user
+      const { user, tokens, isNewUser } = await this.authService.googleAuth(googleUser);
+
+      // Set HTTP-only cookies
+      const { isProduction, accessTokenExpiresIn, refreshTokenExpiresIn } = this.getCookieConfig();
+      setAuthCookies(res, tokens.accessToken, tokens.refreshToken, isProduction, accessTokenExpiresIn, refreshTokenExpiresIn);
+
+      return {
+        success: true,
+        message: isNewUser ? 'Account created successfully' : 'Login successful',
+        data: { user },
+      };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid Google token');
+    }
   }
 }

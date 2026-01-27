@@ -19,8 +19,8 @@ export class User {
   @Column({ type: 'varchar', length: 255, unique: true })
   email: string;
 
-  @Column({ type: 'varchar', length: 255 })
-  password: string;
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  password: string | null;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
   avatar: string | null;
@@ -32,6 +32,12 @@ export class User {
   })
   role: string;
 
+  @Column({ type: 'varchar', length: 50, nullable: true, name: 'oauth_provider' })
+  oauthProvider: string | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true, name: 'oauth_id' })
+  oauthId: string | null;
+
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt: Date;
 
@@ -40,6 +46,8 @@ export class User {
 
   @BeforeInsert()
   async hashPassword(): Promise<void> {
+    // Only hash password if it exists and is not already hashed
+    // OAuth users may not have a password
     if (this.password && !this.password.startsWith('$2b$')) {
       const salt = await bcrypt.genSalt(10);
       this.password = await bcrypt.hash(this.password, salt);
@@ -47,6 +55,10 @@ export class User {
   }
 
   async comparePassword(plainPassword: string): Promise<boolean> {
+    // If no password is set (OAuth user), return false
+    if (!this.password) {
+      return false;
+    }
     return bcrypt.compare(plainPassword, this.password);
   }
 }
