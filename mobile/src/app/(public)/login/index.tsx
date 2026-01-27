@@ -163,16 +163,11 @@ export default function LoginScreen() {
     }
   };
 
-  const handleAppleLogin = () => {
-    // TODO: Implement Apple login
-    Alert.alert('Info', 'Apple login coming soon');
-  };
-
   const handleGoogleLogin = async () => {
     try {
       clearError();
       const result = await googleSignIn.mutateAsync();
-      
+
       if (result?.user) {
         Toast.show({
           type: 'success',
