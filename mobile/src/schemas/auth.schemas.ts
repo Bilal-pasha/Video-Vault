@@ -113,15 +113,4 @@ export const changePasswordSchema = z
 
 export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 
-/**
- * Update Profile Schema
- */
-export const updateProfileSchema = z.object({
-  name: nameSchema,
-  email: emailSchema,
-  phone: phoneSchema,
-  avatar: z.string().url().optional().or(z.literal('')),
-});
-
-export type UpdateProfileFormData = z.infer<typeof updateProfileSchema>;
 

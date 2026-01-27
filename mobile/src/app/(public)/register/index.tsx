@@ -30,11 +30,11 @@ import { PublicRoutes, PrivateRoutes } from "@/constants/routes";
 import { registerSchema, type RegisterFormData } from "@/schemas";
 import { images } from "@/constants/images";
 import { useAuth } from "@/providers/AuthProvider";
+import React from "react";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const AnimatedThemedView = Animated.createAnimatedComponent(ThemedView);
 
-const AppleIcon = images.appleLogo;
 const GoogleIcon = images.googleLogo;
 
 export default function RegisterScreen() {

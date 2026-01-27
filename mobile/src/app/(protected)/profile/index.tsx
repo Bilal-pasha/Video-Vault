@@ -33,7 +33,8 @@ import {
   updatePasswordSchema,
   type UpdateProfileFormData,
   type UpdatePasswordFormData,
-} from '@/schemas/profile.schemas';
+} from '@/schemas';
+import React from 'react';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const AnimatedThemedView = Animated.createAnimatedComponent(ThemedView);

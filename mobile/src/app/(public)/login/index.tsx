@@ -30,8 +30,8 @@ import { PublicRoutes, PrivateRoutes } from '@/constants/routes';
 import { loginSchema, type LoginFormData } from '@/schemas';
 import { useAuth } from '@/providers/AuthProvider';
 import { images } from '@/constants/images';
+import React from 'react';
 
-const AppleIcon = images.appleLogo;
 const GoogleIcon = images.googleLogo;
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
