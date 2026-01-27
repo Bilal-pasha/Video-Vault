@@ -1,17 +1,77 @@
-# Welcome to your Expo app 👋
+# Video Mobile Application
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A full-stack mobile application with NestJS backend and React Native/Expo frontend, featuring Google OAuth authentication.
 
-## Get started
+## Features
+
+- 🔐 **Authentication**: Email/password and Google OAuth sign-in
+- 📱 **Mobile-First**: Built with React Native and Expo
+- 🚀 **Modern Backend**: NestJS with TypeORM and PostgreSQL
+- 🎨 **Beautiful UI**: Smooth animations and professional design
+- 🔒 **Secure**: JWT tokens, HTTP-only cookies, server-side verification
+
+## Quick Start
+
+### Google OAuth Setup
+
+Choose the setup guide that matches your deployment:
+
+📱 **[Mobile-Only Setup (IP Address/No Domain)](./MOBILE_OAUTH_SETUP.md)** - For mobile apps with backend on IP address
+
+📖 **[Quick Start Guide](./GOOGLE_OAUTH_QUICKSTART.md)** - General setup guide
+
+📚 **[Complete Documentation](./docs/GOOGLE_OAUTH_SETUP.md)** - Full technical documentation
+
+## Project Structure
+
+```
+├── server/          # NestJS backend
+├── mobile/          # React Native/Expo mobile app
+├── docs/            # Documentation
+└── infra/           # Infrastructure configs
+```
+
+## Get Started
+
+### Backend Setup
 
 1. Install dependencies
-
    ```bash
+   cd server
    npm install
    ```
 
-2. Start the app
+2. Configure environment
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
 
+3. Run database migrations
+   ```bash
+   npm run migration:run
+   ```
+
+4. Start the server
+   ```bash
+   npm run start:dev
+   ```
+
+### Mobile Setup
+
+1. Install dependencies
+   ```bash
+   cd mobile
+   npm install
+   ```
+
+2. Configure environment
+   ```bash
+   cp .env.example .env
+   # Edit .env with your API URL and Google OAuth credentials
+   ```
+
+3. Start the app
    ```bash
    npx expo start
    ```

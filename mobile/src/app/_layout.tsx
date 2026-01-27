@@ -14,11 +14,17 @@ import "../../global.css";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { AuthProvider } from "@/providers/AuthProvider";
+import { configureGoogleSignIn } from "@/services/auth/google-auth.service";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const { hasShareIntent, shareIntent, resetShareIntent } = useShareIntent();
   const router = useRouter();
+
+  // Initialize Google Sign-In
+  useEffect(() => {
+    configureGoogleSignIn();
+  }, []);
 
   useEffect(() => {
     if (!hasShareIntent || !shareIntent) return;

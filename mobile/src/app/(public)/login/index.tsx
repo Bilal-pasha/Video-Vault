@@ -31,6 +31,8 @@ import { loginSchema, type LoginFormData } from '@/schemas';
 import { useAuth } from '@/providers/AuthProvider';
 import { images } from '@/constants/images';
 import React from 'react';
+import { useGoogleSignIn } from '@/services/auth/google-auth.hooks';
+import Toast from 'react-native-toast-message';
 
 const GoogleIcon = images.googleLogo;
 
@@ -42,6 +44,7 @@ export default function LoginScreen() {
   const { signIn, error: authError, clearError, isAuthenticated, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const googleSignIn = useGoogleSignIn();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -165,9 +168,31 @@ export default function LoginScreen() {
     Alert.alert('Info', 'Apple login coming soon');
   };
 
-  const handleGoogleLogin = () => {
-    // TODO: Implement Google login
-    Alert.alert('Info', 'Google login coming soon');
+  const handleGoogleLogin = async () => {
+    try {
+      clearError();
+      const result = await googleSignIn.mutateAsync();
+      
+      if (result?.user) {
+        Toast.show({
+          type: 'success',
+          text1: 'Welcome!',
+          text2: 'Successfully signed in with Google',
+          position: 'top',
+          visibilityTime: 3000,
+        });
+        router.replace(PrivateRoutes.DASHBOARD);
+      }
+    } catch (error: any) {
+      console.error('Google login error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Sign In Failed',
+        text2: error.message || 'Failed to sign in with Google',
+        position: 'top',
+        visibilityTime: 4000,
+      });
+    }
   };
 
   // Animated styles
@@ -383,13 +408,14 @@ export default function LoginScreen() {
                   googleButtonAnimatedStyle,
                   buttonPressStyle,
                 ]}
-                onPress={() => handleButtonPress(handleGoogleLogin)}>
+                onPress={() => handleButtonPress(handleGoogleLogin)}
+                disabled={googleSignIn.isPending}>
                 <ThemedView style={styles.socialButtonContent}>
                   <ThemedView style={styles.iconWrapper}>
                     <GoogleIcon width={20} height={20} />
                   </ThemedView>
                   <Text style={[styles.googleButtonText, { color: textColor }]}>
-                    Continue with Google
+                    {googleSignIn.isPending ? 'Signing in...' : 'Continue with Google'}
                   </Text>
                 </ThemedView>
               </AnimatedPressable>

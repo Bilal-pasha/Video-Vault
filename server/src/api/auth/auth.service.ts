@@ -14,6 +14,7 @@ import { LoginDto } from './dto/login.dto';
 import { UserResponseDto } from './dto/auth-response.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { GoogleUserDto } from './dto/google-auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -195,6 +196,65 @@ export class AuthService {
     // Update password (will be hashed by entity hook)
     user.password = updatePasswordDto.newPassword;
     await this.userRepository.save(user);
+  }
+
+  async googleAuth(googleUser: GoogleUserDto): Promise<{
+    user: UserResponseDto;
+    tokens: { accessToken: string; refreshToken: string };
+    isNewUser: boolean;
+  }> {
+    const { googleId, email, name, picture } = googleUser;
+
+    // Check if user exists with this Google ID
+    let user = await this.userRepository.findOne({
+      where: { oauthProvider: 'google', oauthId: googleId },
+    });
+
+    let isNewUser = false;
+
+    if (!user) {
+      // Check if user exists with this email (from regular signup)
+      user = await this.userRepository.findOne({
+        where: { email: email.toLowerCase().trim() },
+      });
+
+      if (user) {
+        // Link existing account to Google
+        user.oauthProvider = 'google';
+        user.oauthId = googleId;
+        if (picture && !user.avatar) {
+          user.avatar = picture;
+        }
+        await this.userRepository.save(user);
+      } else {
+        // Create new user
+        isNewUser = true;
+        user = this.userRepository.create({
+          email: email.toLowerCase().trim(),
+          name: name.trim(),
+          avatar: picture,
+          oauthProvider: 'google',
+          oauthId: googleId,
+          password: null, // OAuth users don't have passwords
+        });
+        user = await this.userRepository.save(user);
+      }
+    } else {
+      // Update avatar if changed
+      if (picture && picture !== user.avatar) {
+        user.avatar = picture;
+        await this.userRepository.save(user);
+      }
+    }
+
+    // Generate tokens
+    const tokens = this.generateTokens(user);
+
+    return {
+      user: this.mapUserToResponse(user),
+      tokens,
+      isNewUser,
+    };
   }
 
   private mapUserToResponse(user: User): UserResponseDto {
