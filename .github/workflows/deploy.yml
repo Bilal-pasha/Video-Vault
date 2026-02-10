@@ -108,3 +108,5 @@ jobs:
             docker logout ghcr.io
 
             echo "✅ Deployment to GCP completed"
+
+            
