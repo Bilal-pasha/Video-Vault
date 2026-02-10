@@ -12,7 +12,7 @@ services:
     networks:
       - video-app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -31,13 +31,13 @@ services:
       - video-app-network
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD} --port ${REDIS_PORT}
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       interval: 10s
       timeout: 3s
       retries: 5
 
   server:
-    image: ${REGISTRY}/${IMAGE_NAME_LOWER}:latest
+    image: ${REGISTRY}/${IMAGE_NAME_LOWER}/server:latest
     container_name: video-app-server
     restart: unless-stopped
     env_file:
@@ -84,4 +84,3 @@ volumes:
     driver: local
   caddy_logs:
     driver: local
-
