@@ -7,7 +7,6 @@ ENV NODE_OPTIONS=--max_old_space_size=4096
 
 COPY package*.json ./
 
-# More stable under emulation
 RUN npm ci --prefer-offline --no-audit
 
 COPY . .
@@ -18,6 +17,10 @@ COPY start.sh ./start.sh
 COPY migrate.sh ./migrate.sh
 RUN chmod +x ./start.sh ./migrate.sh
 
+# Install bash
+RUN apt-get update && apt-get install -y bash && rm -rf /var/lib/apt/lists/*
+
 EXPOSE 8000
 
-CMD ["sh", "./start.sh"]
+# Use bash to run the script
+CMD ["bash", "./start.sh"]
