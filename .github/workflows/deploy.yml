@@ -47,6 +47,8 @@ jobs:
           username: ${{ secrets.GCP_USERNAME }}
           key: ${{ secrets.GCP_SSH_KEY }}
           port: 22
+          timeout: 20m 
+          command_timeout: 20m
           script: |
             sudo mkdir -p /home/${{ secrets.GCP_USERNAME }}/${{ env.DEPLOY_DIR }}
             sudo chown -R ${{ secrets.GCP_USERNAME }}:${{ secrets.GCP_USERNAME }} /home/${{ secrets.GCP_USERNAME }}/${{ env.DEPLOY_DIR }}
@@ -77,6 +79,8 @@ jobs:
           username: ${{ secrets.GCP_USERNAME }}
           key: ${{ secrets.GCP_SSH_KEY }}
           port: 22
+          timeout: 20m
+          command_timeout: 20m
           envs: REGISTRY,IMAGE_NAME_LOWER,GITHUB_TOKEN
           script: |
             set -e
